@@ -40,7 +40,10 @@ export function scoreItem(item: NewsItem, keywords: string[], now: Date): NewsIt
     if (matched) categories.push(keyword.toLowerCase());
   }
 
-  score += recencyBonus(item.publishedAt, now);
+  // Recency boosts relevant items; it never makes a non-matching item relevant.
+  if (categories.length > 0) {
+    score += recencyBonus(item.publishedAt, now);
+  }
 
   return { ...item, score, categories };
 }
