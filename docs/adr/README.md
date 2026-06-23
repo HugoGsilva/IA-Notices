@@ -25,6 +25,8 @@ justificada em um ADR** antes de ser implementada.
 
 ## Índice
 
-| ADR                                  | Título        | Status |
-| ------------------------------------ | ------------- | ------ |
-| [0001](./0001-stack-inicial.md)      | Stack inicial | Aceito |
+| ADR                                       | Título                | Status |
+| ----------------------------------------- | --------------------- | ------ |
+| [0001](./0001-stack-inicial.md)           | Stack inicial         | Aceito |
+| [0002](./0002-agendamento.md)             | Agendamento (node-cron) | Aceito |
+| [0003](./0003-modelo-de-curadoria.md)     | Modelo de curadoria   | Aceito |

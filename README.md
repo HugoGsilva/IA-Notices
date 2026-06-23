@@ -85,7 +85,58 @@ serem explicitamente habilitados.
 > commitados. Use `.env` local (ignorado pelo Git) ou o gerenciador de segredos
 > do ambiente de deploy.
 
+## Como funciona
+
+A cada execução, o pipeline:
+
+1. **busca** notícias nos providers habilitados (em paralelo, com falhas
+   isoladas);
+2. **normaliza** para um formato comum (datas ISO, dedup key por URL canônica);
+3. **pontua** por relevância (heurística de keywords + bônus de recência) e
+   **categoriza** pelas keywords encontradas — ver ADR 0003;
+4. **filtra** por score mínimo, janela temporal e idioma;
+5. **deduplica** dentro do lote e contra o histórico no banco;
+6. **persiste** os itens novos;
+7. **entrega** um digest dos melhores itens ao Discord (quando habilitado).
+
+### Providers
+
+Toda fonte externa é um **provider plugável** atrás da interface comum, ativado
+por configuração. No MVP:
+
+| Provider      | Variáveis                          | Observação                  |
+| ------------- | ---------------------------------- | --------------------------- |
+| NewsAPI.org   | `NEWSAPI_ENABLED`, `NEWSAPI_KEY`   | Requer chave.               |
+| GDELT 2.0 DOC | `GDELT_ENABLED`                    | Sem chave.                  |
+
+Stubs desabilitados (Event Registry, The Guardian, NYT, Mediastack) já seguem a
+interface e serão implementados no futuro (ver `AGENTS.md`, seção 5).
+
+### Execução
+
+- **Agendada:** com `SCHEDULE_ENABLED=true`, o pipeline roda na expressão
+  `SCHEDULE_CRON` (padrão: de hora em hora).
+- **Manual:** endpoint protegido por `ADMIN_TOKEN`:
+
+  ```bash
+  curl -X POST http://localhost:3000/internal/run \
+    -H "Authorization: Bearer $ADMIN_TOKEN"
+  ```
+
+  Sem token configurado o endpoint responde `503`; token inválido responde
+  `401`. A resposta de sucesso traz um resumo com contadores
+  (`fetched`, `kept`, `inserted`, `delivered`).
+
+## Arquitetura
+
+Decisões registradas em [`docs/adr/`](./docs/adr): stack (0001), agendamento
+(0002) e modelo de curadoria (0003). O núcleo (`src/pipeline`) opera apenas
+sobre tipos normalizados e não conhece providers concretos; o transporte de
+notificação fica atrás da interface `Notifier`. Detalhes em `src/README.md` e
+nas regras do `AGENTS.md`.
+
 ## Status
 
-Em construção (MVP incremental). Veja `AGENTS.md` (seção 2) para o escopo e
-`src/README.md` para o mapa dos módulos.
+MVP funcional: providers (NewsAPI.org + GDELT), curadoria heurística,
+persistência, entrega Discord, agendamento e endpoint manual protegido. Tudo
+desligado por padrão até ser configurado.
