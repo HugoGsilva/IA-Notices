@@ -1,12 +1,13 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import type { FastifyInstance } from 'fastify';
 import { buildServer } from '../../src/server/app.js';
+import { loadConfig } from '../../src/config/env.js';
 
 describe('HTTP server (foundation)', () => {
   let app: FastifyInstance;
 
   beforeAll(async () => {
-    app = buildServer({ NODE_ENV: 'test', HOST: '0.0.0.0', PORT: 3000, LOG_LEVEL: 'silent' });
+    app = buildServer(loadConfig({ NODE_ENV: 'test', LOG_LEVEL: 'silent' }));
     await app.ready();
   });
 
