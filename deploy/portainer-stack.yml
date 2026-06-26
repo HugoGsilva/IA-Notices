@@ -6,11 +6,13 @@
 # stack deliberately has NO Traefik route and is NOT on the public network.
 #
 # Prerequisites:
-#   1. Publish the image to a registry (Swarm does not build):
+#   1. Publish the image to a registry (Swarm does not build). The CI workflow
+#      (.github/workflows/release.yml) does this automatically on every push to
+#      `main` (publishing `:latest`), so normally you don't build by hand. To do
+#      it manually:
 #        docker build -t hugogsilva/ia-notices:latest .
 #        docker push hugogsilva/ia-notices:latest
 #      (cross-arch: docker buildx build --platform linux/amd64 -t ... --push .)
-#      The release workflow (.github/workflows/release.yml) does this on tags.
 #   2. In Portainer → Stacks → Add stack, paste this file and set the
 #      environment variables below (at least DISCORD_WEBHOOK_URL).
 # =============================================================================
