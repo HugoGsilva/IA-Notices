@@ -6,6 +6,11 @@ import { noopLogger, type Logger } from '../logging/logger.js';
 const PROVIDER_NAME = 'gdelt';
 const ENDPOINT = 'https://api.gdeltproject.org/api/v2/doc/doc';
 const HOUR_MS = 60 * 60 * 1000;
+/**
+ * GDELT rejects very long boolean queries (and returns a plain-text error, not
+ * JSON). Bound the number of OR clauses to stay comfortably within its limits.
+ */
+const MAX_QUERY_TERMS = 8;
 
 export interface GdeltOptions {
   enabled: boolean;
@@ -79,9 +84,20 @@ export class GdeltProvider implements NewsProvider {
   }
 }
 
-/** Build a GDELT boolean query, quoting multi-word phrases and OR-ing terms. */
+/**
+ * Build a GDELT boolean query: quote EVERY term and OR a bounded number of them.
+ *
+ * Quoting is not just for multi-word phrases — GDELT treats a bare hyphen as a
+ * NOT operator, so an unquoted token like `GPT-5` or `fine-tuning` corrupts the
+ * query and GDELT answers with a plain-text "Your query…" error instead of JSON.
+ * Quoting neutralises hyphens/digits and is harmless for plain words.
+ */
 function buildQuery(keywords: string[]): string {
-  const terms = keywords.map((keyword) => (keyword.includes(' ') ? `"${keyword}"` : keyword));
+  const terms = keywords
+    .slice(0, MAX_QUERY_TERMS)
+    .map((keyword) => keyword.trim())
+    .filter((keyword) => keyword.length > 0)
+    .map((keyword) => `"${keyword}"`);
   return terms.length > 1 ? `(${terms.join(' OR ')})` : (terms[0] ?? '');
 }
 
