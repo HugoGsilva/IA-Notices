@@ -2,10 +2,12 @@ name: Release image
 
 # Build and publish the Docker image to Docker Hub.
 #
-# Triggers on version tags (v1.2.3) and on manual dispatch. Requires two repo
+# Triggers on pushes to main (republishes :latest), on version tags (v1.2.3,
+# which also produce the semver tags) and on manual dispatch. Requires two repo
 # secrets: DOCKERHUB_USERNAME and DOCKERHUB_TOKEN (a Docker Hub access token).
 on:
   push:
+    branches: ['main']
     tags: ['v*']
   workflow_dispatch:
 
@@ -38,11 +40,14 @@ jobs:
         uses: docker/metadata-action@v5
         with:
           images: ${{ secrets.DOCKERHUB_USERNAME }}/ia-notices
+          # latest=true keeps :latest pointing at the most recent build
+          # (main push or version tag).
+          flavor: latest=true
           tags: |
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
-            type=raw,value=latest,enable=${{ github.ref_type == 'tag' }}
-            type=sha,enable=${{ github.ref_type != 'tag' }}
+            type=raw,value=main,enable={{is_default_branch}}
+            type=sha
 
       - name: Build and push
         uses: docker/build-push-action@v6
