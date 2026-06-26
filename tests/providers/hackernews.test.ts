@@ -71,6 +71,40 @@ describe('HackerNewsProvider', () => {
     });
 
     expect(await provider.search(query)).toEqual([]);
-    expect(warn).toHaveBeenCalledOnce();
+    // One focused search per keyword, each failure isolated and logged.
+    expect(warn).toHaveBeenCalled();
+  });
+
+  it('runs one focused search per keyword (no AND-dump) and dedups hits', async () => {
+    const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      okResponse({
+        hits: [
+          {
+            objectID: '1',
+            title: 'New open-source LLM released',
+            url: 'https://example.com/llm',
+            points: 240,
+            num_comments: 88,
+            created_at: '2026-06-23T10:00:00Z',
+          },
+        ],
+      }),
+    );
+    const provider = new HackerNewsProvider({ enabled: true, http });
+
+    const items = await provider.search(query);
+
+    // Two keywords → two requests, each a single focused term (not a dump).
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(new URL(String(fetchMock.mock.calls[0]![0])).searchParams.get('query')).toBe('LLM');
+    expect(new URL(String(fetchMock.mock.calls[1]![0])).searchParams.get('query')).toBe(
+      'model release',
+    );
+    // optionalWords (the Algolia 400 culprit) is no longer sent.
+    expect(new URL(String(fetchMock.mock.calls[0]![0])).searchParams.has('optionalWords')).toBe(
+      false,
+    );
+    // The same story returned by both terms is deduped by objectID.
+    expect(items).toHaveLength(1);
   });
 });

@@ -46,13 +46,42 @@ describe('GdeltProvider', () => {
       publishedAt: '2026-06-23T12:00:00.000Z',
       provider: 'gdelt',
     });
-    // Multi-word keyword is quoted and OR-ed.
+    // Every term is quoted (neutralises hyphens GDELT reads as NOT) and OR-ed.
     const calledUrl = new URL(String(fetchMock.mock.calls[0]![0]));
-    expect(calledUrl.searchParams.get('query')).toBe('("artificial intelligence" OR AI)');
+    expect(calledUrl.searchParams.get('query')).toBe('("artificial intelligence" OR "AI")');
     expect(calledUrl.searchParams.get('format')).toBe('json');
     // Uses a relative timespan (clock-skew safe), not an absolute window.
     expect(calledUrl.searchParams.get('timespan')).toMatch(/^\d+[hd]$/);
     expect(calledUrl.searchParams.get('startdatetime')).toBeNull();
+  });
+
+  it('quotes hyphenated terms and caps the number of OR clauses', async () => {
+    const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue(okResponse({ articles: [] }));
+    const provider = new GdeltProvider({ enabled: true, http });
+
+    await provider.search({
+      ...query,
+      keywords: [
+        'GPT-5',
+        'GPT-4o',
+        'Claude',
+        'Gemini',
+        'Llama 3',
+        'Mistral',
+        'Qwen',
+        'a',
+        'b',
+        'c',
+      ],
+    });
+
+    const q = new URL(String(fetchMock.mock.calls[0]![0])).searchParams.get('query')!;
+    // Hyphenated/multi-word tokens are quoted (GDELT reads a bare '-' as NOT).
+    expect(q).toContain('"GPT-5"');
+    expect(q).toContain('"Llama 3"');
+    // Bounded to 8 OR clauses; the 9th/10th keyword is dropped.
+    expect(q.split(' OR ')).toHaveLength(8);
+    expect(q).not.toContain('"c"');
   });
 
   it('returns [] on error', async () => {
