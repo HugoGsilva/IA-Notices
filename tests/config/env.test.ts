@@ -57,4 +57,17 @@ describe('loadConfig', () => {
   it('rejects a malformed Discord webhook URL', () => {
     expect(() => loadConfig({ DISCORD_WEBHOOK_URL: 'not-a-url' })).toThrow(/DISCORD_WEBHOOK_URL/);
   });
+
+  it('treats empty-string optionals as unset (compose ${VAR:-} default)', () => {
+    const config = loadConfig({
+      ADMIN_TOKEN: '',
+      NEWSAPI_KEY: '',
+      GUARDIAN_KEY: '   ',
+      DISCORD_WEBHOOK_URL: '',
+    });
+    expect(config.ADMIN_TOKEN).toBeUndefined();
+    expect(config.NEWSAPI_KEY).toBeUndefined();
+    expect(config.GUARDIAN_KEY).toBeUndefined();
+    expect(config.DISCORD_WEBHOOK_URL).toBeUndefined();
+  });
 });

@@ -21,6 +21,18 @@ const booleanFromEnv = (defaultValue: boolean) =>
       return ['1', 'true', 'yes', 'on'].includes(value.trim().toLowerCase());
     });
 
+/**
+ * Wrap a schema so empty/whitespace-only env values are treated as absent.
+ * Compose/Swarm env blocks commonly inject `VAR=` (an empty string) for unset
+ * optionals via `${VAR:-}`, which would otherwise fail an optional/`min(1)`
+ * check and crash startup.
+ */
+const emptyAsUnset = <T extends z.ZodTypeAny>(schema: T) =>
+  z.preprocess(
+    (value) => (typeof value === 'string' && value.trim() === '' ? undefined : value),
+    schema,
+  );
+
 /** Parse a comma-separated list into a trimmed, non-empty string array. */
 const csvList = (defaultValue: string) =>
   z
@@ -49,10 +61,10 @@ const envSchema = z.object({
 
   // --- Providers ------------------------------------------------------------
   NEWSAPI_ENABLED: booleanFromEnv(false),
-  NEWSAPI_KEY: z.string().optional(),
+  NEWSAPI_KEY: emptyAsUnset(z.string().optional()),
   GDELT_ENABLED: booleanFromEnv(false),
   GUARDIAN_ENABLED: booleanFromEnv(false),
-  GUARDIAN_KEY: z.string().optional(),
+  GUARDIAN_KEY: emptyAsUnset(z.string().optional()),
 
   // --- Curation -------------------------------------------------------------
   NEWS_KEYWORDS: csvList('artificial intelligence,machine learning,LLM,AI'),
@@ -63,14 +75,14 @@ const envSchema = z.object({
 
   // --- Discord delivery -----------------------------------------------------
   DISCORD_ENABLED: booleanFromEnv(false),
-  DISCORD_WEBHOOK_URL: z.string().url().optional(),
+  DISCORD_WEBHOOK_URL: emptyAsUnset(z.string().url().optional()),
 
   // --- Scheduling -----------------------------------------------------------
   SCHEDULE_ENABLED: booleanFromEnv(false),
   SCHEDULE_CRON: z.string().min(1).default('0 * * * *'),
 
   // --- Admin ----------------------------------------------------------------
-  ADMIN_TOKEN: z.string().min(1).optional(),
+  ADMIN_TOKEN: emptyAsUnset(z.string().min(1).optional()),
 });
 
 export type AppConfig = z.infer<typeof envSchema>;
