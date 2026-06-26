@@ -26,6 +26,7 @@ describe('loadConfig', () => {
     const config = loadConfig({});
     expect(config.NEWSAPI_ENABLED).toBe(false);
     expect(config.GDELT_ENABLED).toBe(false);
+    expect(config.HACKERNEWS_ENABLED).toBe(false);
     expect(config.DISCORD_ENABLED).toBe(false);
     expect(config.SCHEDULE_ENABLED).toBe(false);
     expect(config.ADMIN_TOKEN).toBeUndefined();

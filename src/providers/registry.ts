@@ -4,6 +4,7 @@ import { HttpClient } from '../http/client.js';
 import { noopLogger, type Logger } from '../logging/logger.js';
 import { GdeltProvider } from './gdelt.js';
 import { GuardianProvider } from './guardian.js';
+import { HackerNewsProvider } from './hackernews.js';
 import { NewsApiProvider } from './newsapi.js';
 import { createStubProviders } from './stubs.js';
 
@@ -42,6 +43,7 @@ export class ProviderRegistry {
         http,
         logger,
       }),
+      new HackerNewsProvider({ enabled: config.HACKERNEWS_ENABLED, http, logger }),
       ...createStubProviders(),
     ];
 

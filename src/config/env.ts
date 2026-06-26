@@ -65,6 +65,8 @@ const envSchema = z.object({
   GDELT_ENABLED: booleanFromEnv(false),
   GUARDIAN_ENABLED: booleanFromEnv(false),
   GUARDIAN_KEY: emptyAsUnset(z.string().optional()),
+  // Hacker News (Algolia search) — no key; a developer-focused source.
+  HACKERNEWS_ENABLED: booleanFromEnv(false),
 
   // --- Curation -------------------------------------------------------------
   NEWS_KEYWORDS: csvList('artificial intelligence,machine learning,LLM,AI'),

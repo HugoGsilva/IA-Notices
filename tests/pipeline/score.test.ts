@@ -36,6 +36,26 @@ describe('scoreItem', () => {
     expect(scored.categories).toEqual([]);
   });
 
+  it('matches whole words only — no substring false positives', () => {
+    const scored = scoreItem(
+      item({ title: 'Rain in Spain stays available', description: 'maintain the campaign' }),
+      ['ai'],
+      NOW,
+    );
+    expect(scored.score).toBe(0);
+    expect(scored.categories).toEqual([]);
+  });
+
+  it('matches a standalone short keyword', () => {
+    const scored = scoreItem(
+      item({ title: 'New AI model shipped', description: 'none' }),
+      ['ai'],
+      NOW,
+    );
+    expect(scored.score).toBe(2);
+    expect(scored.categories).toEqual(['ai']);
+  });
+
   it('adds a recency bonus for fresh items', () => {
     const fresh = scoreItem(
       item({ publishedAt: '2026-06-23T09:00:00.000Z' }), // 3h old → +2
