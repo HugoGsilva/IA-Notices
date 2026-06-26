@@ -5,6 +5,7 @@ import { noopLogger, type Logger } from '../logging/logger.js';
 
 const PROVIDER_NAME = 'gdelt';
 const ENDPOINT = 'https://api.gdeltproject.org/api/v2/doc/doc';
+const HOUR_MS = 60 * 60 * 1000;
 
 export interface GdeltOptions {
   enabled: boolean;
@@ -49,12 +50,16 @@ export class GdeltProvider implements NewsProvider {
     url.searchParams.set('format', 'json');
     url.searchParams.set('sort', 'DateDesc');
     url.searchParams.set('maxrecords', String(Math.min(query.limit, 250)));
-    url.searchParams.set('startdatetime', toGdeltTime(query.from));
-    url.searchParams.set('enddatetime', toGdeltTime(new Date()));
+    // Use a relative timespan rather than absolute start/end datetimes: GDELT
+    // computes it against its own latest data, so it is immune to clock skew on
+    // the host (an absolute window in the "future" would return nothing).
+    url.searchParams.set('timespan', toTimespan(query.from));
 
     try {
       const body = await this.http.getJson<GdeltResponse>(url.toString());
-      return (body.articles ?? [])
+      const articles = body.articles ?? [];
+      this.logger.info(`[${PROVIDER_NAME}] received ${articles.length} article(s)`);
+      return articles
         .filter((article) => article.title && article.url)
         .map((article) => ({
           title: article.title!,
@@ -80,12 +85,14 @@ function buildQuery(keywords: string[]): string {
   return terms.length > 1 ? `(${terms.join(' OR ')})` : (terms[0] ?? '');
 }
 
-/** GDELT expects `YYYYMMDDHHMMSS` in UTC. */
-function toGdeltTime(date: Date): string {
-  return date
-    .toISOString()
-    .replace(/[-:]/g, '')
-    .replace(/\.\d{3}Z$/, '');
+/**
+ * Express the lookback window (`now - from`) as a GDELT `timespan` string.
+ * The absolute clock value is irrelevant — only the size of the window matters,
+ * and GDELT anchors it to its own most recent data.
+ */
+function toTimespan(from: Date): string {
+  const hours = Math.max(1, Math.round((Date.now() - from.getTime()) / HOUR_MS));
+  return hours <= 72 ? `${hours}h` : `${Math.ceil(hours / 24)}d`;
 }
 
 /** GDELT `seendate` looks like `20260623T120000Z`; convert to ISO-8601. */

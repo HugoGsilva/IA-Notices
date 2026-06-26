@@ -23,17 +23,19 @@ async function main(): Promise<void> {
     retries: config.HTTP_RETRIES,
   });
 
-  // The HTTP server owns the logger; build it first so providers/notifier log
-  // through the same Pino instance.
-  const registry = ProviderRegistry.fromConfig(config);
+  // The HTTP server owns the logger; build it first so the providers and the
+  // notifier log through the same Pino instance — otherwise provider fetch
+  // failures (e.g. a provider returning nothing) are swallowed silently.
+  const app = buildServer(config, {
+    runPipeline: () => runPipeline({ config, registry, repository, notifier, logger: app.log }),
+  });
+
+  const registry = ProviderRegistry.fromConfig(config, app.log);
   const notifier = new DiscordWebhookNotifier({
     enabled: config.DISCORD_ENABLED,
     webhookUrl: config.DISCORD_WEBHOOK_URL,
     http: httpClient,
-  });
-
-  const app = buildServer(config, {
-    runPipeline: () => runPipeline({ config, registry, repository, notifier, logger: app.log }),
+    logger: app.log,
   });
 
   const scheduler = new PipelineScheduler({

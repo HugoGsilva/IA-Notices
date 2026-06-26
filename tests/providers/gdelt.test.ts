@@ -50,6 +50,9 @@ describe('GdeltProvider', () => {
     const calledUrl = new URL(String(fetchMock.mock.calls[0]![0]));
     expect(calledUrl.searchParams.get('query')).toBe('("artificial intelligence" OR AI)');
     expect(calledUrl.searchParams.get('format')).toBe('json');
+    // Uses a relative timespan (clock-skew safe), not an absolute window.
+    expect(calledUrl.searchParams.get('timespan')).toMatch(/^\d+[hd]$/);
+    expect(calledUrl.searchParams.get('startdatetime')).toBeNull();
   });
 
   it('returns [] on error', async () => {
