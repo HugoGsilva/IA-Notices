@@ -7,9 +7,23 @@ const RECENT_24H_BONUS = 1;
 
 const HOUR_MS = 60 * 60 * 1000;
 
-/** Does `haystack` contain `keyword` as a case-insensitive substring? */
-function contains(haystack: string, keyword: string): boolean {
-  return haystack.toLowerCase().includes(keyword.toLowerCase());
+/** Escape a string for safe use inside a RegExp. */
+function escapeRegExp(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+/**
+ * Does `haystack` contain `keyword` as a whole word (case-insensitive)?
+ *
+ * Whole-word matching (Unicode-aware boundaries) avoids substring false
+ * positives — e.g. the keyword "AI" must not match "Sp**ai**n" or
+ * "av**ai**lable". Multi-word keywords like "machine learning" still match.
+ */
+function matchesKeyword(haystack: string, keyword: string): boolean {
+  const term = keyword.trim();
+  if (!term) return false;
+  const pattern = new RegExp(`(?<![\\p{L}\\p{N}])${escapeRegExp(term)}(?![\\p{L}\\p{N}])`, 'iu');
+  return pattern.test(haystack);
 }
 
 /**
@@ -29,11 +43,11 @@ export function scoreItem(item: NewsItem, keywords: string[], now: Date): NewsIt
 
   for (const keyword of keywords) {
     let matched = false;
-    if (contains(title, keyword)) {
+    if (matchesKeyword(title, keyword)) {
       score += TITLE_WEIGHT;
       matched = true;
     }
-    if (contains(description, keyword)) {
+    if (matchesKeyword(description, keyword)) {
       score += DESCRIPTION_WEIGHT;
       matched = true;
     }

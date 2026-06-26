@@ -51,7 +51,15 @@ describe('ProviderRegistry', () => {
   it('builds disabled real + stub providers from a default config', () => {
     const registry = ProviderRegistry.fromConfig(loadConfig({}));
     const names = registry.all().map((p) => p.name);
-    expect(names).toEqual(['newsapi', 'gdelt', 'guardian', 'eventregistry', 'nyt', 'mediastack']);
+    expect(names).toEqual([
+      'newsapi',
+      'gdelt',
+      'guardian',
+      'hackernews',
+      'eventregistry',
+      'nyt',
+      'mediastack',
+    ]);
     // Everything is disabled by default.
     expect(registry.enabled()).toEqual([]);
   });
@@ -64,8 +72,14 @@ describe('ProviderRegistry', () => {
         GDELT_ENABLED: 'true',
         GUARDIAN_ENABLED: 'true',
         GUARDIAN_KEY: 'g',
+        HACKERNEWS_ENABLED: 'true',
       }),
     );
-    expect(registry.enabled().map((p) => p.name)).toEqual(['newsapi', 'gdelt', 'guardian']);
+    expect(registry.enabled().map((p) => p.name)).toEqual([
+      'newsapi',
+      'gdelt',
+      'guardian',
+      'hackernews',
+    ]);
   });
 });

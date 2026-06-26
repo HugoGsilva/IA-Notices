@@ -76,6 +76,7 @@ serem explicitamente habilitados.
 | `GDELT_ENABLED`       | `false`                                            | Habilita o provider GDELT 2.0 (sem chave).                       |
 | `GUARDIAN_ENABLED`    | `false`                                            | Habilita o provider The Guardian.                               |
 | `GUARDIAN_KEY`        | —                                                  | Chave do The Guardian Open Platform (**segredo**).             |
+| `HACKERNEWS_ENABLED`  | `false`                                            | Habilita o provider Hacker News (sem chave).                    |
 | `NEWS_KEYWORDS`       | `artificial intelligence,machine learning,LLM,AI` | Keywords de IA (separadas por vírgula).                          |
 | `NEWS_LANGUAGE`       | `en`                                               | Idioma preferido (ISO 639-1).                                   |
 | `NEWS_LOOKBACK_HOURS` | `24`                                               | Janela temporal de busca, em horas.                             |
@@ -115,6 +116,7 @@ por configuração. No MVP:
 | NewsAPI.org   | `NEWSAPI_ENABLED`, `NEWSAPI_KEY`     | Requer chave.               |
 | GDELT 2.0 DOC | `GDELT_ENABLED`                      | Sem chave.                  |
 | The Guardian  | `GUARDIAN_ENABLED`, `GUARDIAN_KEY`   | Requer chave (gratuita).    |
+| Hacker News   | `HACKERNEWS_ENABLED`                 | Sem chave; foco em dev.     |
 
 Stubs desabilitados (Event Registry, NYT, Mediastack) já seguem a interface e
 serão implementados no futuro (ver `AGENTS.md`, seção 5).
