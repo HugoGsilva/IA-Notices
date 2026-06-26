@@ -1,0 +1,88 @@
+# =============================================================================
+# IA-Notices — Docker Swarm / Portainer stack
+#
+# IA-Notices is a headless worker: an internal scheduler runs the pipeline and
+# delivery to Discord is OUTBOUND. Nothing reaches it from the internet, so this
+# stack deliberately has NO Traefik route and is NOT on the public network.
+#
+# Prerequisites:
+#   1. Publish the image to a registry (Swarm does not build):
+#        docker build -t hugogsilva/ia-notices:latest .
+#        docker push hugogsilva/ia-notices:latest
+#      (cross-arch: docker buildx build --platform linux/amd64 -t ... --push .)
+#      The release workflow (.github/workflows/release.yml) does this on tags.
+#   2. In Portainer → Stacks → Add stack, paste this file and set the
+#      environment variables below (at least DISCORD_WEBHOOK_URL).
+# =============================================================================
+
+version: '3.8'
+
+services:
+  ia-notices:
+    image: hugogsilva/ia-notices:latest
+    environment:
+      NODE_ENV: production
+      HOST: 0.0.0.0
+      PORT: 3000
+      DATABASE_PATH: /app/data/ia-notices.sqlite
+      LOG_LEVEL: '${LOG_LEVEL:-info}'
+      # --- Providers ---
+      GDELT_ENABLED: '${GDELT_ENABLED:-true}'
+      NEWSAPI_ENABLED: '${NEWSAPI_ENABLED:-false}'
+      NEWSAPI_KEY: '${NEWSAPI_KEY:-}'
+      GUARDIAN_ENABLED: '${GUARDIAN_ENABLED:-false}'
+      GUARDIAN_KEY: '${GUARDIAN_KEY:-}'
+      # --- Curation ---
+      NEWS_KEYWORDS: '${NEWS_KEYWORDS:-artificial intelligence,machine learning,LLM,AI}'
+      NEWS_LANGUAGE: '${NEWS_LANGUAGE:-en}'
+      NEWS_LOOKBACK_HOURS: '${NEWS_LOOKBACK_HOURS:-24}'
+      NEWS_MAX_ITEMS: '${NEWS_MAX_ITEMS:-20}'
+      NEWS_MIN_SCORE: '${NEWS_MIN_SCORE:-1}'
+      # --- Discord delivery ---
+      DISCORD_ENABLED: '${DISCORD_ENABLED:-true}'
+      DISCORD_WEBHOOK_URL: '${DISCORD_WEBHOOK_URL:?DISCORD_WEBHOOK_URL is required}'
+      # --- Scheduler ---
+      SCHEDULE_ENABLED: '${SCHEDULE_ENABLED:-true}'
+      SCHEDULE_CRON: '${SCHEDULE_CRON:-0 * * * *}'
+      # --- Admin (optional: only for the manual run endpoint) ---
+      ADMIN_TOKEN: '${ADMIN_TOKEN:-}'
+    volumes:
+      - ia-notices-data:/app/data
+    networks:
+      - internal
+    deploy:
+      # IMPORTANT: SQLite is single-writer — NEVER scale replicas above 1, and
+      # do not use a start-first rollout (it would briefly run two writers).
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 5
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
+
+    # -------------------------------------------------------------------------
+    # OPTIONAL — expose POST /internal/run through Traefik for remote manual
+    # triggering (protected by ADMIN_TOKEN). Not needed for automatic operation.
+    # To enable: also add `network_swarm_public` to the networks list above and
+    # declare it under the top-level `networks:` as external, then move the
+    # labels below into the `deploy:` block.
+    #
+    #      labels:
+    #        - traefik.enable=true
+    #        - traefik.http.routers.ia-notices.rule=Host(`ia-notices.hugogsilva.dev`) && PathPrefix(`/internal/run`)
+    #        - traefik.http.routers.ia-notices.entrypoints=websecure
+    #        - traefik.http.routers.ia-notices.tls.certresolver=letsencryptresolver
+    #        - traefik.http.services.ia-notices.loadbalancer.server.port=3000
+    # -------------------------------------------------------------------------
+
+networks:
+  internal:
+    driver: overlay
+  # network_swarm_public:   # uncomment only if exposing via Traefik (see above)
+  #   external: true
+
+volumes:
+  ia-notices-data:

@@ -51,6 +51,10 @@ cp .env.example .env   # configure antes de subir
 docker compose up --build
 ```
 
+Para deploy em **Docker Swarm / Portainer** (com build & push automático da
+imagem via CI), veja [`deploy/README.md`](./deploy/README.md) e a stack em
+[`deploy/portainer-stack.yml`](./deploy/portainer-stack.yml).
+
 ## Configuração
 
 Toda configuração vem de variáveis de ambiente, validadas no startup (a
