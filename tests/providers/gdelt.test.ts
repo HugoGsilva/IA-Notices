@@ -56,14 +56,23 @@ describe('GdeltProvider', () => {
   });
 
   it('quotes hyphenated terms and caps the number of OR clauses', async () => {
-    const fetchMock = vi
-      .spyOn(globalThis, 'fetch')
-      .mockResolvedValue(okResponse({ articles: [] }));
+    const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue(okResponse({ articles: [] }));
     const provider = new GdeltProvider({ enabled: true, http });
 
     await provider.search({
       ...query,
-      keywords: ['GPT-5', 'GPT-4o', 'Claude', 'Gemini', 'Llama 3', 'Mistral', 'Qwen', 'a', 'b', 'c'],
+      keywords: [
+        'GPT-5',
+        'GPT-4o',
+        'Claude',
+        'Gemini',
+        'Llama 3',
+        'Mistral',
+        'Qwen',
+        'a',
+        'b',
+        'c',
+      ],
     });
 
     const q = new URL(String(fetchMock.mock.calls[0]![0])).searchParams.get('query')!;
