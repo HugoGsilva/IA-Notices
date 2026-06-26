@@ -53,8 +53,9 @@ const envSchema = z.object({
   LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace', 'silent']).default('info'),
 
   // --- HTTP client ----------------------------------------------------------
-  HTTP_TIMEOUT_MS: z.coerce.number().int().positive().max(60000).default(10000),
-  HTTP_RETRIES: z.coerce.number().int().min(0).max(5).default(2),
+  // Generous timeout/retries: some sources (e.g. GDELT) are slow and flaky.
+  HTTP_TIMEOUT_MS: z.coerce.number().int().positive().max(60000).default(20000),
+  HTTP_RETRIES: z.coerce.number().int().min(0).max(5).default(3),
 
   // --- Database -------------------------------------------------------------
   DATABASE_PATH: z.string().min(1).default('data/ia-notices.sqlite'),
@@ -69,11 +70,20 @@ const envSchema = z.object({
   HACKERNEWS_ENABLED: booleanFromEnv(false),
 
   // --- Curation -------------------------------------------------------------
-  NEWS_KEYWORDS: csvList('artificial intelligence,machine learning,LLM,AI'),
+  // Defaults tuned for developer/AI-model news: specific model names and
+  // dev-relevant topics (whole-word matched, so short distinctive terms are
+  // safe). Override via NEWS_KEYWORDS to taste.
+  NEWS_KEYWORDS: csvList(
+    'GPT-5,GPT-4o,Claude,Gemini,Llama 3,Mistral,DeepSeek,Qwen,open-source model,' +
+      'open weights,language model,model release,fine-tuning,AI agent,coding assistant,' +
+      'Copilot,Hugging Face,multimodal,inference',
+  ),
   NEWS_LANGUAGE: z.string().min(2).max(5).default('en'),
-  NEWS_LOOKBACK_HOURS: z.coerce.number().int().positive().max(720).default(24),
+  NEWS_LOOKBACK_HOURS: z.coerce.number().int().positive().max(720).default(48),
   NEWS_MAX_ITEMS: z.coerce.number().int().positive().max(200).default(20),
-  NEWS_MIN_SCORE: z.coerce.number().min(0).default(1),
+  // With whole-word matching, a single title hit on a specific keyword (=2) is
+  // already high signal, so 2 is the inclusive-but-clean default.
+  NEWS_MIN_SCORE: z.coerce.number().min(0).default(2),
 
   // --- Discord delivery -----------------------------------------------------
   DISCORD_ENABLED: booleanFromEnv(false),

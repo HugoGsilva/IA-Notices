@@ -47,12 +47,14 @@ describe('loadConfig', () => {
   it('applies curation and http defaults', () => {
     const config = loadConfig({});
     expect(config.NEWS_LANGUAGE).toBe('en');
-    expect(config.NEWS_LOOKBACK_HOURS).toBe(24);
+    expect(config.NEWS_LOOKBACK_HOURS).toBe(48);
     expect(config.NEWS_MAX_ITEMS).toBe(20);
-    expect(config.NEWS_MIN_SCORE).toBe(1);
-    expect(config.HTTP_TIMEOUT_MS).toBe(10000);
-    expect(config.HTTP_RETRIES).toBe(2);
+    expect(config.NEWS_MIN_SCORE).toBe(2);
+    expect(config.HTTP_TIMEOUT_MS).toBe(20000);
+    expect(config.HTTP_RETRIES).toBe(3);
     expect(config.DATABASE_PATH).toBe('data/ia-notices.sqlite');
+    // Dev/AI-model focused keyword defaults.
+    expect(config.NEWS_KEYWORDS).toContain('model release');
   });
 
   it('rejects a malformed Discord webhook URL', () => {

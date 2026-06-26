@@ -26,18 +26,14 @@ services:
       PORT: 3000
       DATABASE_PATH: /app/data/ia-notices.sqlite
       LOG_LEVEL: '${LOG_LEVEL:-info}'
-      # --- Providers ---
+      # --- Sources (no API key; on by default for this deployment) ---
       GDELT_ENABLED: '${GDELT_ENABLED:-true}'
+      HACKERNEWS_ENABLED: '${HACKERNEWS_ENABLED:-true}'
+      # Optional keyed providers (stay off unless you provide a key):
       NEWSAPI_ENABLED: '${NEWSAPI_ENABLED:-false}'
       NEWSAPI_KEY: '${NEWSAPI_KEY:-}'
       GUARDIAN_ENABLED: '${GUARDIAN_ENABLED:-false}'
       GUARDIAN_KEY: '${GUARDIAN_KEY:-}'
-      # --- Curation ---
-      NEWS_KEYWORDS: '${NEWS_KEYWORDS:-artificial intelligence,machine learning,LLM,AI}'
-      NEWS_LANGUAGE: '${NEWS_LANGUAGE:-en}'
-      NEWS_LOOKBACK_HOURS: '${NEWS_LOOKBACK_HOURS:-24}'
-      NEWS_MAX_ITEMS: '${NEWS_MAX_ITEMS:-20}'
-      NEWS_MIN_SCORE: '${NEWS_MIN_SCORE:-1}'
       # --- Discord delivery ---
       DISCORD_ENABLED: '${DISCORD_ENABLED:-true}'
       DISCORD_WEBHOOK_URL: '${DISCORD_WEBHOOK_URL:?DISCORD_WEBHOOK_URL is required}'
@@ -46,6 +42,15 @@ services:
       SCHEDULE_CRON: '${SCHEDULE_CRON:-0 * * * *}'
       # --- Admin (optional: only for the manual run endpoint) ---
       ADMIN_TOKEN: '${ADMIN_TOKEN:-}'
+      # --- Curation tuning ---
+      # Sensible defaults (dev/AI-model keywords, MIN_SCORE=2, LOOKBACK=48h,
+      # HTTP timeout/retries) are baked into the image. Uncomment to override
+      # without rebuilding:
+      # NEWS_KEYWORDS: '${NEWS_KEYWORDS:-GPT-5,GPT-4o,Claude,Gemini,Llama 3,Mistral,model release,open-source model,fine-tuning,AI agent,coding assistant,Copilot,Hugging Face}'
+      # NEWS_MIN_SCORE: '${NEWS_MIN_SCORE:-2}'
+      # NEWS_LOOKBACK_HOURS: '${NEWS_LOOKBACK_HOURS:-48}'
+      # HTTP_TIMEOUT_MS: '${HTTP_TIMEOUT_MS:-20000}'
+      # HTTP_RETRIES: '${HTTP_RETRIES:-3}'
     volumes:
       - ia-notices-data:/app/data
     networks:
