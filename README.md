@@ -68,8 +68,8 @@ serem explicitamente habilitados.
 | `HOST`                | `0.0.0.0`                                          | Host de bind do servidor HTTP.                                    |
 | `PORT`                | `3000`                                             | Porta do servidor HTTP.                                          |
 | `LOG_LEVEL`           | `info`                                             | Nível de log (`fatal`…`silent`).                                 |
-| `HTTP_TIMEOUT_MS`     | `10000`                                            | Timeout por tentativa em requisições externas.                  |
-| `HTTP_RETRIES`        | `2`                                                | Retentativas após a primeira tentativa.                         |
+| `HTTP_TIMEOUT_MS`     | `20000`                                            | Timeout por tentativa em requisições externas.                  |
+| `HTTP_RETRIES`        | `3`                                                | Retentativas após a primeira tentativa.                         |
 | `DATABASE_PATH`       | `data/ia-notices.sqlite`                           | Caminho do arquivo SQLite.                                       |
 | `NEWSAPI_ENABLED`     | `false`                                            | Habilita o provider NewsAPI.org.                                |
 | `NEWSAPI_KEY`         | —                                                  | Chave da NewsAPI.org (**segredo**).                             |
@@ -77,11 +77,11 @@ serem explicitamente habilitados.
 | `GUARDIAN_ENABLED`    | `false`                                            | Habilita o provider The Guardian.                               |
 | `GUARDIAN_KEY`        | —                                                  | Chave do The Guardian Open Platform (**segredo**).             |
 | `HACKERNEWS_ENABLED`  | `false`                                            | Habilita o provider Hacker News (sem chave).                    |
-| `NEWS_KEYWORDS`       | `artificial intelligence,machine learning,LLM,AI` | Keywords de IA (separadas por vírgula).                          |
+| `NEWS_KEYWORDS`       | _(lista focada em dev/modelos)_                    | Keywords de IA (separadas por vírgula). Match por palavra inteira. |
 | `NEWS_LANGUAGE`       | `en`                                               | Idioma preferido (ISO 639-1).                                   |
-| `NEWS_LOOKBACK_HOURS` | `24`                                               | Janela temporal de busca, em horas.                             |
+| `NEWS_LOOKBACK_HOURS` | `48`                                               | Janela temporal de busca, em horas.                             |
 | `NEWS_MAX_ITEMS`      | `20`                                               | Máximo de itens por execução.                                   |
-| `NEWS_MIN_SCORE`      | `1`                                                | Score mínimo para manter/entregar um item.                      |
+| `NEWS_MIN_SCORE`      | `2`                                                | Score mínimo para manter/entregar um item.                      |
 | `DISCORD_ENABLED`     | `false`                                            | Habilita a entrega no Discord.                                  |
 | `DISCORD_WEBHOOK_URL` | —                                                  | URL do Webhook do Discord (**segredo**).                        |
 | `SCHEDULE_ENABLED`    | `false`                                            | Habilita a execução agendada.                                   |
