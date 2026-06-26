@@ -1,0 +1,24 @@
+services:
+  app:
+    build: .
+    image: ia-notices:latest
+    ports:
+      - '${PORT:-3000}:3000'
+    environment:
+      # Configuration is injected at runtime; the image contains no secrets.
+      NODE_ENV: production
+      HOST: 0.0.0.0
+      PORT: 3000
+      # SQLite lives on the mounted volume below.
+      DATABASE_PATH: /app/data/ia-notices.sqlite
+    # Provide secrets and provider/Discord/scheduler settings via a local .env
+    # file (never committed). See .env.example for the full list.
+    env_file:
+      - path: .env
+        required: false
+    volumes:
+      - ia-notices-data:/app/data
+    restart: unless-stopped
+
+volumes:
+  ia-notices-data:
