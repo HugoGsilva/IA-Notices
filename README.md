@@ -70,6 +70,8 @@ serem explicitamente habilitados.
 | `NEWSAPI_ENABLED`     | `false`                                            | Habilita o provider NewsAPI.org.                                |
 | `NEWSAPI_KEY`         | —                                                  | Chave da NewsAPI.org (**segredo**).                             |
 | `GDELT_ENABLED`       | `false`                                            | Habilita o provider GDELT 2.0 (sem chave).                       |
+| `GUARDIAN_ENABLED`    | `false`                                            | Habilita o provider The Guardian.                               |
+| `GUARDIAN_KEY`        | —                                                  | Chave do The Guardian Open Platform (**segredo**).             |
 | `NEWS_KEYWORDS`       | `artificial intelligence,machine learning,LLM,AI` | Keywords de IA (separadas por vírgula).                          |
 | `NEWS_LANGUAGE`       | `en`                                               | Idioma preferido (ISO 639-1).                                   |
 | `NEWS_LOOKBACK_HOURS` | `24`                                               | Janela temporal de busca, em horas.                             |
@@ -104,13 +106,14 @@ A cada execução, o pipeline:
 Toda fonte externa é um **provider plugável** atrás da interface comum, ativado
 por configuração. No MVP:
 
-| Provider      | Variáveis                          | Observação                  |
-| ------------- | ---------------------------------- | --------------------------- |
-| NewsAPI.org   | `NEWSAPI_ENABLED`, `NEWSAPI_KEY`   | Requer chave.               |
-| GDELT 2.0 DOC | `GDELT_ENABLED`                    | Sem chave.                  |
+| Provider      | Variáveis                            | Observação                  |
+| ------------- | ------------------------------------ | --------------------------- |
+| NewsAPI.org   | `NEWSAPI_ENABLED`, `NEWSAPI_KEY`     | Requer chave.               |
+| GDELT 2.0 DOC | `GDELT_ENABLED`                      | Sem chave.                  |
+| The Guardian  | `GUARDIAN_ENABLED`, `GUARDIAN_KEY`   | Requer chave (gratuita).    |
 
-Stubs desabilitados (Event Registry, The Guardian, NYT, Mediastack) já seguem a
-interface e serão implementados no futuro (ver `AGENTS.md`, seção 5).
+Stubs desabilitados (Event Registry, NYT, Mediastack) já seguem a interface e
+serão implementados no futuro (ver `AGENTS.md`, seção 5).
 
 ### Execução
 

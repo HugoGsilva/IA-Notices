@@ -3,6 +3,7 @@ import type { NewsProvider, NewsSearchQuery, RawNewsItem } from '../domain/types
 import { HttpClient } from '../http/client.js';
 import { noopLogger, type Logger } from '../logging/logger.js';
 import { GdeltProvider } from './gdelt.js';
+import { GuardianProvider } from './guardian.js';
 import { NewsApiProvider } from './newsapi.js';
 import { createStubProviders } from './stubs.js';
 
@@ -35,6 +36,12 @@ export class ProviderRegistry {
         logger,
       }),
       new GdeltProvider({ enabled: config.GDELT_ENABLED, http, logger }),
+      new GuardianProvider({
+        enabled: config.GUARDIAN_ENABLED,
+        apiKey: config.GUARDIAN_KEY,
+        http,
+        logger,
+      }),
       ...createStubProviders(),
     ];
 

@@ -103,8 +103,8 @@ adaptadores para:
 | ------------------------------------- | ------------- | ------------------------------------------------------ |
 | **NewsAPI.org**                       | Implementar   | https://newsapi.org/docs                               |
 | **GDELT 2.0 DOC API**                 | Implementar   | https://blog.gdeltproject.org/gdelt-doc-2-0-api-debuts |
+| **The Guardian Open Platform**        | Implementar   | https://open-platform.theguardian.com/documentation    |
 | **Event Registry / NewsAPI.ai**       | Previsto      | https://eventregistry.org/documentation                |
-| **The Guardian Open Platform**        | Previsto      | https://open-platform.theguardian.com/documentation    |
 | **New York Times Article Search API** | Previsto      | https://developer.nytimes.com/docs                      |
 | **Mediastack**                        | Previsto      | https://mediastack.com/documentation                    |
 

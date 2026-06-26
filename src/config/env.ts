@@ -51,6 +51,8 @@ const envSchema = z.object({
   NEWSAPI_ENABLED: booleanFromEnv(false),
   NEWSAPI_KEY: z.string().optional(),
   GDELT_ENABLED: booleanFromEnv(false),
+  GUARDIAN_ENABLED: booleanFromEnv(false),
+  GUARDIAN_KEY: z.string().optional(),
 
   // --- Curation -------------------------------------------------------------
   NEWS_KEYWORDS: csvList('artificial intelligence,machine learning,LLM,AI'),

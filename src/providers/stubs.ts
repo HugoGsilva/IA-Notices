@@ -6,7 +6,7 @@ import type { NewsProvider } from '../domain/types.js';
  * anything. Real adapters replace these following AGENTS.md section 13.
  *
  * Planned (see AGENTS.md section 5): Event Registry / NewsAPI.ai,
- * The Guardian Open Platform, NYT Article Search, Mediastack.
+ * NYT Article Search, Mediastack.
  */
 class DisabledProvider implements NewsProvider {
   readonly enabled = false;
@@ -16,7 +16,7 @@ class DisabledProvider implements NewsProvider {
   }
 }
 
-export const STUB_PROVIDER_NAMES = ['eventregistry', 'guardian', 'nyt', 'mediastack'] as const;
+export const STUB_PROVIDER_NAMES = ['eventregistry', 'nyt', 'mediastack'] as const;
 
 /** Build the disabled stub providers for sources not yet implemented. */
 export function createStubProviders(): NewsProvider[] {
