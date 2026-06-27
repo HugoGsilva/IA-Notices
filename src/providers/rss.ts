@@ -48,7 +48,14 @@ export class RssProvider implements NewsProvider {
       try {
         const response = await this.http.request(feed, { headers: { Accept: ACCEPT } });
         const xml = await response.text();
+        if (!looksLikeFeed(xml)) {
+          // A redirected/blocked/landing HTML page is not a feed; parsing it
+          // would scrape junk pseudo-entries. Skip it.
+          this.logger.warn(`[${PROVIDER_NAME}] skipped ${maskUrl(feed)}: response is not a feed`);
+          continue;
+        }
         const channel = feedTitle(xml);
+        const language = feedLanguage(xml);
         for (const entry of parseEntries(xml).slice(0, MAX_ENTRIES_PER_FEED)) {
           if (!entry.title || !entry.link) continue;
           if (collected.has(entry.link)) continue;
@@ -58,6 +65,9 @@ export class RssProvider implements NewsProvider {
             source: channel ?? hostOf(feed),
             publishedAt: entry.published,
             description: entry.summary,
+            // Lets the core language gate drop an explicitly non-English feed;
+            // when the feed declares nothing, the script gate is the backstop.
+            language,
             provider: PROVIDER_NAME,
           });
         }
@@ -119,6 +129,20 @@ function feedTitle(xml: string): string | undefined {
   // The first <title> before any item/entry is the channel/feed title.
   const head = xml.split(/<(?:item|entry)\b/i)[0] ?? xml;
   return tagText(head, 'title');
+}
+
+/** The feed's declared language (RSS `<language>` or Atom root `xml:lang`). */
+function feedLanguage(xml: string): string | undefined {
+  const head = xml.split(/<(?:item|entry)\b/i)[0] ?? xml;
+  const rss = tagText(head, 'language');
+  if (rss) return rss;
+  return /<feed\b[^>]*\bxml:lang=["']?([^"'\s>]+)/i.exec(head)?.[1];
+}
+
+/** A cheap sanity check that the response is an RSS/Atom feed, not an HTML page. */
+function looksLikeFeed(xml: string): boolean {
+  const head = xml.slice(0, 1000);
+  return /<(rss|feed)\b/i.test(head) || head.trimStart().startsWith('<?xml');
 }
 
 /** Extract and clean the text content of the first `<tag>…</tag>` in `xml`. */

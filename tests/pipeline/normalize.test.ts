@@ -19,6 +19,17 @@ describe('canonicalizeUrl', () => {
   it('returns the input when it is not a valid URL', () => {
     expect(canonicalizeUrl('not a url')).toBe('not a url');
   });
+
+  it('rewrites an arXiv PDF link to its abstract page', () => {
+    expect(canonicalizeUrl('https://arxiv.org/pdf/2406.12345.pdf')).toBe(
+      'https://arxiv.org/abs/2406.12345',
+    );
+    expect(canonicalizeUrl('https://arxiv.org/pdf/2406.12345')).toBe(
+      'https://arxiv.org/abs/2406.12345',
+    );
+    // Non-arXiv hosts are untouched.
+    expect(canonicalizeUrl('https://example.com/pdf/x.pdf')).toBe('https://example.com/pdf/x.pdf');
+  });
 });
 
 describe('makeDedupKey', () => {

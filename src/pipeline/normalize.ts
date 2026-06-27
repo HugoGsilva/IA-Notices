@@ -13,6 +13,11 @@ export function canonicalizeUrl(url: string): string {
     const parsed = new URL(url);
     parsed.hash = '';
     parsed.host = parsed.host.toLowerCase();
+    // arXiv: prefer the abstract page over the raw PDF, so the paper survives
+    // the non-article URL gate and dedups with its /abs/ form.
+    if (/(^|\.)arxiv\.org$/i.test(parsed.hostname)) {
+      parsed.pathname = parsed.pathname.replace(/^\/pdf\/(.+?)(?:\.pdf)?\/?$/i, '/abs/$1');
+    }
     for (const key of [...parsed.searchParams.keys()]) {
       if (TRACKING_PARAMS.test(key)) parsed.searchParams.delete(key);
     }
@@ -60,7 +65,9 @@ const trimOrNull = (value: string | undefined): string | null => {
 export function normalizeItem(raw: RawNewsItem, now: Date): NewsItem {
   return {
     title: raw.title.trim(),
-    url: raw.url.trim(),
+    // Canonical form for the delivered link too: drops tracking params and
+    // rewrites arXiv /pdf/ → /abs/ so it reads as (and survives as) an article.
+    url: canonicalizeUrl(raw.url.trim()),
     source: trimOrNull(raw.source),
     publishedAt: normalizePublishedAt(raw.publishedAt),
     description: trimOrNull(raw.description),
