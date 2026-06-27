@@ -25,10 +25,17 @@ export class HttpError extends Error {
   constructor(
     readonly status: number,
     readonly statusText: string,
+    /** Best-effort, truncated response body to aid diagnosis (never secrets). */
+    readonly body?: string,
   ) {
-    super(`HTTP ${status} ${statusText}`);
+    super(`HTTP ${status} ${statusText}${body ? `: ${body}` : ''}`);
     this.name = 'HttpError';
   }
+}
+
+/** Collapse whitespace and truncate a body so it is safe/short to log. */
+function snippet(text: string): string {
+  return text.replace(/\s+/g, ' ').trim().slice(0, 200);
 }
 
 /**
@@ -62,7 +69,14 @@ export class HttpClient {
   /** Perform a request and return the parsed JSON body. */
   async getJson<T>(url: string, options: HttpRequestOptions = {}): Promise<T> {
     const response = await this.request(url, options);
-    return (await response.json()) as T;
+    const text = await response.text();
+    try {
+      return JSON.parse(text) as T;
+    } catch {
+      // Some APIs answer 200 with a plain-text error page (e.g. GDELT). Surface
+      // it instead of an opaque "Unexpected token" parse error.
+      throw new Error(`Invalid JSON from ${maskUrl(url)}: ${snippet(text)}`);
+    }
   }
 
   /** Perform a request with timeout + retries. Throws `HttpError` on non-2xx. */
@@ -80,7 +94,15 @@ export class HttpClient {
           signal: controller.signal,
         });
         if (!response.ok) {
-          throw new HttpError(response.status, response.statusText);
+          // Capture a short body snippet so 4xx causes (e.g. an invalid query
+          // parameter) are visible in logs instead of a bare status code.
+          let body: string | undefined;
+          try {
+            body = snippet(await response.text());
+          } catch {
+            body = undefined;
+          }
+          throw new HttpError(response.status, response.statusText, body);
         }
         return response;
       } catch (error) {
