@@ -5,15 +5,22 @@ import { noopLogger, type Logger } from '../logging/logger.js';
 
 const PROVIDER_NAME = 'hackernews';
 const ENDPOINT = 'https://hn.algolia.com/api/v1/search';
-/** Only surface stories with at least this many points (a quality signal). */
-const DEFAULT_MIN_POINTS = 10;
+/**
+ * Only surface stories with at least this many points. Points are HN's primary
+ * quality/relevance signal: a genuinely notable model release or technique
+ * comfortably clears this bar, while the low-engagement noise that made earlier
+ * digests feel "random" does not. Tunable via HACKERNEWS_MIN_POINTS.
+ */
+const DEFAULT_MIN_POINTS = 50;
 /**
  * Algolia's `query` is AND-by-default, so dumping every keyword into one request
  * matches nothing (and an over-long/`optionalWords` request is rejected with a
  * 400). Instead we run one focused search per keyword and merge the results,
- * bounded so the per-run request count stays small.
+ * bounded so the per-run request count stays small. The keyword defaults lead
+ * with the most specific, least-ambiguous dev/AI terms so these searches spend
+ * their budget on high-signal queries.
  */
-const MAX_QUERY_TERMS = 6;
+const MAX_QUERY_TERMS = 8;
 
 export interface HackerNewsOptions {
   enabled: boolean;

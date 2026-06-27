@@ -11,6 +11,13 @@ const HOUR_MS = 60 * 60 * 1000;
  * JSON). Bound the number of OR clauses to stay comfortably within its limits.
  */
 const MAX_QUERY_TERMS = 8;
+/**
+ * GDELT rejects any term shorter than this with "The specified phrase is too
+ * short." Quoting a token like `GPT-5` makes GDELT tokenise it into `GPT` + `5`,
+ * and the lone `5` trips that error — poisoning the whole request. So we only
+ * pass keywords whose every word-token clears this length.
+ */
+const MIN_TERM_LENGTH = 3;
 
 export interface GdeltOptions {
   enabled: boolean;
@@ -91,14 +98,26 @@ export class GdeltProvider implements NewsProvider {
  * NOT operator, so an unquoted token like `GPT-5` or `fine-tuning` corrupts the
  * query and GDELT answers with a plain-text "Your query…" error instead of JSON.
  * Quoting neutralises hyphens/digits and is harmless for plain words.
+ *
+ * Keywords that tokenise to anything shorter than {@link MIN_TERM_LENGTH} (e.g.
+ * the `5` in `GPT-5`, the `3` in `Llama 3`) are dropped: GDELT rejects them as
+ * "too short" and a single bad term fails the entire request. The drop happens
+ * before the cap so we keep up to MAX_QUERY_TERMS *usable* terms.
  */
 function buildQuery(keywords: string[]): string {
   const terms = keywords
-    .slice(0, MAX_QUERY_TERMS)
     .map((keyword) => keyword.trim())
     .filter((keyword) => keyword.length > 0)
+    .filter(isGdeltSafe)
+    .slice(0, MAX_QUERY_TERMS)
     .map((keyword) => `"${keyword}"`);
   return terms.length > 1 ? `(${terms.join(' OR ')})` : (terms[0] ?? '');
+}
+
+/** True when every word-token in `keyword` is long enough for GDELT to accept. */
+function isGdeltSafe(keyword: string): boolean {
+  const tokens = keyword.split(/[^\p{L}\p{N}]+/u).filter((token) => token.length > 0);
+  return tokens.length > 0 && tokens.every((token) => token.length >= MIN_TERM_LENGTH);
 }
 
 /**

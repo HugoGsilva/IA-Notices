@@ -66,6 +66,28 @@ describe('HackerNewsProvider', () => {
     );
   });
 
+  it('applies the points quality gate (default 50, configurable)', async () => {
+    const hits = {
+      hits: [
+        { objectID: '1', title: 'Big launch', url: 'https://example.com/a', points: 120 },
+        { objectID: '2', title: 'Solid post', url: 'https://example.com/b', points: 40 },
+      ],
+    };
+    // Fresh Response per call: a Response body can only be read once, and each
+    // search issues one fetch per keyword.
+    vi.spyOn(globalThis, 'fetch').mockImplementation(() => Promise.resolve(okResponse(hits)));
+
+    // Default threshold (50) drops the 40-point story.
+    const strict = await new HackerNewsProvider({ enabled: true, http }).search(query);
+    expect(strict.map((item) => item.title)).toEqual(['Big launch']);
+
+    // A lower configured threshold lets it through.
+    const lenient = await new HackerNewsProvider({ enabled: true, http, minPoints: 10 }).search(
+      query,
+    );
+    expect(lenient.map((item) => item.title)).toEqual(['Big launch', 'Solid post']);
+  });
+
   it('isolates errors and returns []', async () => {
     vi.spyOn(globalThis, 'fetch').mockRejectedValue(new Error('boom'));
     const warn = vi.fn();

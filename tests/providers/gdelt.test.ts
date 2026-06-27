@@ -7,7 +7,7 @@ afterEach(() => vi.restoreAllMocks());
 
 const http = new HttpClient({ timeoutMs: 1000, retries: 0 });
 const query: NewsSearchQuery = {
-  keywords: ['artificial intelligence', 'AI'],
+  keywords: ['artificial intelligence', 'language model'],
   from: new Date('2026-06-22T00:00:00.000Z'),
   language: 'en',
   limit: 5,
@@ -48,40 +48,50 @@ describe('GdeltProvider', () => {
     });
     // Every term is quoted (neutralises hyphens GDELT reads as NOT) and OR-ed.
     const calledUrl = new URL(String(fetchMock.mock.calls[0]![0]));
-    expect(calledUrl.searchParams.get('query')).toBe('("artificial intelligence" OR "AI")');
+    expect(calledUrl.searchParams.get('query')).toBe(
+      '("artificial intelligence" OR "language model")',
+    );
     expect(calledUrl.searchParams.get('format')).toBe('json');
     // Uses a relative timespan (clock-skew safe), not an absolute window.
     expect(calledUrl.searchParams.get('timespan')).toMatch(/^\d+[hd]$/);
     expect(calledUrl.searchParams.get('startdatetime')).toBeNull();
   });
 
-  it('quotes hyphenated terms and caps the number of OR clauses', async () => {
+  it('drops terms with too-short tokens, quotes the rest, and caps OR clauses', async () => {
     const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue(okResponse({ articles: [] }));
     const provider = new GdeltProvider({ enabled: true, http });
 
     await provider.search({
       ...query,
       keywords: [
-        'GPT-5',
-        'GPT-4o',
+        // Tokenise to a too-short fragment GDELT rejects as "phrase too short":
+        'GPT-5', // → GPT + 5
+        'Llama 3', // → Llama + 3
+        'AI', // 2 chars
+        // GDELT-safe terms (every token >= 3 chars):
         'Claude',
         'Gemini',
-        'Llama 3',
         'Mistral',
         'Qwen',
-        'a',
-        'b',
-        'c',
+        'DeepSeek',
+        'fine-tuning',
+        'coding assistant',
+        'open weights',
+        'prompt engineering', // 9th safe term — dropped by the 8-clause cap
       ],
     });
 
     const q = new URL(String(fetchMock.mock.calls[0]![0])).searchParams.get('query')!;
-    // Hyphenated/multi-word tokens are quoted (GDELT reads a bare '-' as NOT).
-    expect(q).toContain('"GPT-5"');
-    expect(q).toContain('"Llama 3"');
-    // Bounded to 8 OR clauses; the 9th/10th keyword is dropped.
+    // Terms whose tokens are too short never reach GDELT (they would 400 it).
+    expect(q).not.toContain('GPT-5');
+    expect(q).not.toContain('Llama 3');
+    expect(q).not.toContain('"AI"');
+    // Hyphenated/multi-word SAFE tokens are quoted (GDELT reads a bare '-' as NOT).
+    expect(q).toContain('"fine-tuning"');
+    expect(q).toContain('"coding assistant"');
+    // Bounded to 8 OR clauses; the 9th safe keyword is dropped.
     expect(q.split(' OR ')).toHaveLength(8);
-    expect(q).not.toContain('"c"');
+    expect(q).not.toContain('prompt engineering');
   });
 
   it('returns [] on error', async () => {
