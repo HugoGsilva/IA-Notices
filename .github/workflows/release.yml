@@ -1,20 +1,10 @@
-name: Build & publish image
+name: Release image
 
 # Build and publish the Docker image to Docker Hub.
 #
-# Triggers:
-#   - push to `main`     → publishes `:latest` (+ a `sha-<commit>` tag). This is
-#     the auto-deploy path: every merge to main refreshes the image the
-#     Portainer/Swarm stack pulls.
-#   - push of a `v*` tag → publishes the semver tags (`1.2.3`, `1.2`).
-#   - manual dispatch.
-#
-# Requires two repo secrets (Settings → Secrets and variables → Actions):
-#   DOCKERHUB_USERNAME and DOCKERHUB_TOKEN (a Docker Hub access token).
-#
-# This only keeps `:latest` up to date; it does NOT restart the running
-# container. After a merge, click "Update/Pull" on the stack in Portainer and
-# the corrected image is already there.
+# Triggers on pushes to main (republishes :latest), on version tags (v1.2.3,
+# which also produce the semver tags) and on manual dispatch. Requires two repo
+# secrets: DOCKERHUB_USERNAME and DOCKERHUB_TOKEN (a Docker Hub access token).
 on:
   push:
     branches: ['main']
@@ -50,11 +40,14 @@ jobs:
         uses: docker/metadata-action@v5
         with:
           images: ${{ secrets.DOCKERHUB_USERNAME }}/ia-notices
+          # latest=true keeps :latest pointing at the most recent build
+          # (main push or version tag).
+          flavor: latest=true
           tags: |
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
-            type=raw,value=latest,enable={{is_default_branch}}
-            type=sha,prefix=sha-
+            type=raw,value=main,enable={{is_default_branch}}
+            type=sha
 
       - name: Build and push
         uses: docker/build-push-action@v6

@@ -58,26 +58,17 @@ cadência do `SCHEDULE_CRON`.
 ## Build & push automático (CI)
 
 O workflow [`.github/workflows/release.yml`](../.github/workflows/release.yml)
-builda e publica a imagem no Docker Hub automaticamente:
-
-- **a cada push na `main`** → publica `:latest` (mais uma tag `sha-<commit>` para
-  rastreabilidade/rollback). **Este é o caminho de deploy automático**: todo
-  merge na main atualiza a imagem que a stack puxa.
-- **a cada tag `v*`** → publica as versões semver (`0.1.0`, `0.1`).
-
-Configure dois segredos no repositório
+builda e publica a imagem no Docker Hub a cada tag `v*` (e em
+`workflow_dispatch`). Configure dois segredos no repositório
 (**Settings → Secrets and variables → Actions**):
 
 - `DOCKERHUB_USERNAME` — seu usuário do Docker Hub.
 - `DOCKERHUB_TOKEN` — um *access token* do Docker Hub (não a senha).
 
-Com isso, basta dar merge na `main` que o `:latest` é reconstruído. Para marcar
-uma versão estável, crie a tag:
+Com isso, publicar uma versão é só criar a tag:
 
 ```bash
 git tag v0.1.0 && git push origin v0.1.0
 ```
 
-> O build **não** reinicia o container — ele só mantém o `:latest` atualizado.
-> Depois do merge, é só clicar em **Update/Pull** na stack do Portainer e a
-> imagem já estará correta.
+A imagem sai como `hugogsilva/ia-notices:0.1.0` e `:latest`.
