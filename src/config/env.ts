@@ -68,15 +68,22 @@ const envSchema = z.object({
   GUARDIAN_KEY: emptyAsUnset(z.string().optional()),
   // Hacker News (Algolia search) — no key; a developer-focused source.
   HACKERNEWS_ENABLED: booleanFromEnv(false),
+  // Minimum HN points for a story to be surfaced. A relevance/quality gate:
+  // higher = stricter (fewer, more notable stories). Tune without a rebuild.
+  HACKERNEWS_MIN_POINTS: z.coerce.number().int().min(0).default(50),
 
   // --- Curation -------------------------------------------------------------
-  // Defaults tuned for developer/AI-model news: specific model names and
-  // dev-relevant topics (whole-word matched, so short distinctive terms are
-  // safe). Override via NEWS_KEYWORDS to taste.
+  // Defaults tuned for developer/AI news. Ordered deliberately: the most
+  // specific, least-ambiguous dev/AI terms come FIRST, because per-keyword
+  // searches (e.g. Hacker News) only spend their budget on the leading terms.
+  // Ambiguous bare model names (Claude/Gemini/Mistral — also a person, a
+  // zodiac sign, a wind) sit at the tail, where they still contribute to
+  // scoring but don't pull off-topic stories into the feed. Whole-word matched,
+  // so short distinctive terms are safe. Override via NEWS_KEYWORDS to taste.
   NEWS_KEYWORDS: csvList(
-    'GPT-5,GPT-4o,Claude,Gemini,Llama 3,Mistral,DeepSeek,Qwen,open-source model,' +
-      'open weights,language model,model release,fine-tuning,AI agent,coding assistant,' +
-      'Copilot,Hugging Face,multimodal,inference',
+    'LLM,GPT-5,AI agent,open source model,fine-tuning,coding assistant,Hugging Face,' +
+      'language model,model release,open weights,prompt engineering,multimodal,' +
+      'GPT-4o,Claude,Gemini,Llama 3,DeepSeek,Mistral,Qwen,Copilot',
   ),
   NEWS_LANGUAGE: z.string().min(2).max(5).default('en'),
   NEWS_LOOKBACK_HOURS: z.coerce.number().int().positive().max(720).default(48),

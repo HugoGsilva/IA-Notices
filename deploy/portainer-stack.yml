@@ -43,12 +43,15 @@ services:
       # --- Admin (optional: only for the manual run endpoint) ---
       ADMIN_TOKEN: '${ADMIN_TOKEN:-}'
       # --- Curation tuning ---
-      # Sensible defaults (dev/AI-model keywords, MIN_SCORE=2, LOOKBACK=48h,
-      # HTTP timeout/retries) are baked into the image. Uncomment to override
-      # without rebuilding:
-      # NEWS_KEYWORDS: '${NEWS_KEYWORDS:-GPT-5,GPT-4o,Claude,Gemini,Llama 3,Mistral,model release,open-source model,fine-tuning,AI agent,coding assistant,Copilot,Hugging Face}'
+      # Sensible defaults (dev/AI keywords ordered most-specific first,
+      # MIN_SCORE=2, LOOKBACK=48h, HN MIN_POINTS=50, HTTP timeout/retries) are
+      # baked into the image. Uncomment to override without rebuilding:
+      # NEWS_KEYWORDS: '${NEWS_KEYWORDS:-LLM,GPT-5,AI agent,open source model,fine-tuning,coding assistant,Hugging Face,language model,model release,GPT-4o,Claude,Gemini}'
       # NEWS_MIN_SCORE: '${NEWS_MIN_SCORE:-2}'
       # NEWS_LOOKBACK_HOURS: '${NEWS_LOOKBACK_HOURS:-48}'
+      # Raise to tighten the Hacker News quality gate (fewer, more notable
+      # stories); lower if too few items come through.
+      # HACKERNEWS_MIN_POINTS: '${HACKERNEWS_MIN_POINTS:-50}'
       # HTTP_TIMEOUT_MS: '${HTTP_TIMEOUT_MS:-20000}'
       # HTTP_RETRIES: '${HTTP_RETRIES:-3}'
     volumes:

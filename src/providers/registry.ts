@@ -43,7 +43,12 @@ export class ProviderRegistry {
         http,
         logger,
       }),
-      new HackerNewsProvider({ enabled: config.HACKERNEWS_ENABLED, http, logger }),
+      new HackerNewsProvider({
+        enabled: config.HACKERNEWS_ENABLED,
+        http,
+        logger,
+        minPoints: config.HACKERNEWS_MIN_POINTS,
+      }),
       ...createStubProviders(),
     ];
 
