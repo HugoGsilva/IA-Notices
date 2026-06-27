@@ -56,6 +56,9 @@ describe('ProviderRegistry', () => {
       'gdelt',
       'guardian',
       'hackernews',
+      'reddit',
+      'huggingface',
+      'rss',
       'eventregistry',
       'nyt',
       'mediastack',
@@ -73,6 +76,9 @@ describe('ProviderRegistry', () => {
         GUARDIAN_ENABLED: 'true',
         GUARDIAN_KEY: 'g',
         HACKERNEWS_ENABLED: 'true',
+        REDDIT_ENABLED: 'true',
+        HUGGINGFACE_ENABLED: 'true',
+        RSS_ENABLED: 'true',
       }),
     );
     expect(registry.enabled().map((p) => p.name)).toEqual([
@@ -80,6 +86,9 @@ describe('ProviderRegistry', () => {
       'gdelt',
       'guardian',
       'hackernews',
+      'reddit',
+      'huggingface',
+      'rss',
     ]);
   });
 });

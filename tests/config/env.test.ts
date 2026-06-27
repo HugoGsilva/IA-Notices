@@ -53,7 +53,7 @@ describe('loadConfig', () => {
     expect(config.HTTP_TIMEOUT_MS).toBe(20000);
     expect(config.HTTP_RETRIES).toBe(3);
     expect(config.DATABASE_PATH).toBe('data/ia-notices.sqlite');
-    expect(config.HACKERNEWS_MIN_POINTS).toBe(50);
+    expect(config.HACKERNEWS_MIN_POINTS).toBe(30);
     // Dev/AI-model focused keyword defaults.
     expect(config.NEWS_KEYWORDS).toContain('model release');
     // High-signal, least-ambiguous term leads (per-keyword sources search first).
@@ -62,6 +62,17 @@ describe('loadConfig', () => {
 
   it('coerces HACKERNEWS_MIN_POINTS from a string override', () => {
     expect(loadConfig({ HACKERNEWS_MIN_POINTS: '100' }).HACKERNEWS_MIN_POINTS).toBe(100);
+  });
+
+  it('applies defaults for the curated extra sources', () => {
+    const config = loadConfig({});
+    expect(config.REDDIT_ENABLED).toBe(false);
+    expect(config.HUGGINGFACE_ENABLED).toBe(false);
+    expect(config.RSS_ENABLED).toBe(false);
+    expect(config.REDDIT_SUBREDDITS).toContain('LocalLLaMA');
+    expect(config.REDDIT_MIN_UPVOTES).toBe(25);
+    expect(config.REDDIT_LISTING).toBe('day');
+    expect(config.RSS_FEEDS.every((feed) => feed.startsWith('https://'))).toBe(true);
   });
 
   it('rejects a malformed Discord webhook URL', () => {

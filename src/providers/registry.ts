@@ -5,7 +5,10 @@ import { noopLogger, type Logger } from '../logging/logger.js';
 import { GdeltProvider } from './gdelt.js';
 import { GuardianProvider } from './guardian.js';
 import { HackerNewsProvider } from './hackernews.js';
+import { HuggingFaceProvider } from './huggingface.js';
 import { NewsApiProvider } from './newsapi.js';
+import { RedditProvider } from './reddit.js';
+import { RssProvider } from './rss.js';
 import { createStubProviders } from './stubs.js';
 
 /**
@@ -49,6 +52,16 @@ export class ProviderRegistry {
         logger,
         minPoints: config.HACKERNEWS_MIN_POINTS,
       }),
+      new RedditProvider({
+        enabled: config.REDDIT_ENABLED,
+        http,
+        logger,
+        subreddits: config.REDDIT_SUBREDDITS,
+        minUpvotes: config.REDDIT_MIN_UPVOTES,
+        listing: config.REDDIT_LISTING,
+      }),
+      new HuggingFaceProvider({ enabled: config.HUGGINGFACE_ENABLED, http, logger }),
+      new RssProvider({ enabled: config.RSS_ENABLED, http, logger, feeds: config.RSS_FEEDS }),
       ...createStubProviders(),
     ];
 
