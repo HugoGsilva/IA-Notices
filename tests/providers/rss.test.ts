@@ -79,6 +79,33 @@ describe('RssProvider', () => {
     });
   });
 
+  it("stamps items with the feed's declared language", async () => {
+    const ptFeed = RSS.replace(
+      '<title>OpenAI Blog</title>',
+      '<title>Blog</title><language>pt-BR</language>',
+    );
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(xmlResponse(ptFeed));
+    const provider = new RssProvider({ enabled: true, http, feeds: ['https://x/rss'] });
+
+    const items = await provider.search(query);
+    expect(items[0]!.language).toBe('pt-BR');
+  });
+
+  it('skips a response that is not a feed (redirected/blocked HTML page)', async () => {
+    const html = '<!doctype html><html><body><div class="item">not a feed</div></body></html>';
+    const warn = vi.fn();
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(xmlResponse(html));
+    const provider = new RssProvider({
+      enabled: true,
+      http,
+      feeds: ['https://x/rss'],
+      logger: { debug: vi.fn(), info: vi.fn(), warn, error: vi.fn() },
+    });
+
+    expect(await provider.search(query)).toEqual([]);
+    expect(warn).toHaveBeenCalled();
+  });
+
   it('merges multiple feeds, dedups by link, and isolates failures', async () => {
     vi.spyOn(globalThis, 'fetch')
       .mockResolvedValueOnce(xmlResponse(RSS))

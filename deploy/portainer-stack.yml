@@ -72,7 +72,7 @@ services:
       # Source tuning (subreddits, Reddit window, blog feeds):
       # REDDIT_SUBREDDITS: '${REDDIT_SUBREDDITS:-LocalLLaMA,MachineLearning,ChatGPTCoding,ClaudeAI,OpenAI,artificial}'
       # REDDIT_LISTING: '${REDDIT_LISTING:-day}'
-      # RSS_FEEDS: '${RSS_FEEDS:-https://huggingface.co/blog/feed.xml,https://openai.com/news/rss.xml,https://blog.google/technology/ai/rss/,https://deepmind.google/blog/rss.xml}'
+      # RSS_FEEDS: '${RSS_FEEDS:-https://huggingface.co/blog/feed.xml,https://openai.com/news/rss.xml,https://deepmind.google/blog/rss.xml,https://bair.berkeley.edu/blog/feed.xml,https://machinelearning.apple.com/rss.xml}'
       # HTTP_TIMEOUT_MS: '${HTTP_TIMEOUT_MS:-20000}'
       # HTTP_RETRIES: '${HTTP_RETRIES:-3}'
     volumes:

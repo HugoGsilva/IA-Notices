@@ -81,12 +81,15 @@ const envSchema = z.object({
   // Hugging Face daily papers — no key; curated new papers/models.
   HUGGINGFACE_ENABLED: booleanFromEnv(false),
   // RSS/Atom feeds of official AI blogs — no key; feed list is tunable here.
+  // AI-specific English sources only (the general, geo-localized blog.google was
+  // dropped: it served non-English items that slipped past the relevance gates).
   RSS_ENABLED: booleanFromEnv(false),
   RSS_FEEDS: csvList(
     'https://huggingface.co/blog/feed.xml,' +
       'https://openai.com/news/rss.xml,' +
-      'https://blog.google/technology/ai/rss/,' +
-      'https://deepmind.google/blog/rss.xml',
+      'https://deepmind.google/blog/rss.xml,' +
+      'https://bair.berkeley.edu/blog/feed.xml,' +
+      'https://machinelearning.apple.com/rss.xml',
   ),
 
   // --- Curation -------------------------------------------------------------
