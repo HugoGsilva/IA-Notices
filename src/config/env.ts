@@ -70,20 +70,41 @@ const envSchema = z.object({
   HACKERNEWS_ENABLED: booleanFromEnv(false),
   // Minimum HN points for a story to be surfaced. A relevance/quality gate:
   // higher = stricter (fewer, more notable stories). Tune without a rebuild.
-  HACKERNEWS_MIN_POINTS: z.coerce.number().int().min(0).default(50),
+  HACKERNEWS_MIN_POINTS: z.coerce.number().int().min(0).default(30),
+  // Reddit (public JSON listings) — no key; developer/AI communities.
+  REDDIT_ENABLED: booleanFromEnv(false),
+  REDDIT_SUBREDDITS: csvList('LocalLLaMA,MachineLearning,ChatGPTCoding,ClaudeAI,OpenAI,artificial'),
+  // Minimum upvotes for a Reddit post to be surfaced (quality gate).
+  REDDIT_MIN_UPVOTES: z.coerce.number().int().min(0).default(25),
+  // Reddit "top" listing window: hour | day | week | month | year | all.
+  REDDIT_LISTING: z.enum(['hour', 'day', 'week', 'month', 'year', 'all']).default('day'),
+  // Hugging Face daily papers — no key; curated new papers/models.
+  HUGGINGFACE_ENABLED: booleanFromEnv(false),
+  // RSS/Atom feeds of official AI blogs — no key; feed list is tunable here.
+  RSS_ENABLED: booleanFromEnv(false),
+  RSS_FEEDS: csvList(
+    'https://huggingface.co/blog/feed.xml,' +
+      'https://openai.com/news/rss.xml,' +
+      'https://blog.google/technology/ai/rss/,' +
+      'https://deepmind.google/blog/rss.xml',
+  ),
 
   // --- Curation -------------------------------------------------------------
-  // Defaults tuned for developer/AI news. Ordered deliberately: the most
-  // specific, least-ambiguous dev/AI terms come FIRST, because per-keyword
-  // searches (e.g. Hacker News) only spend their budget on the leading terms.
-  // Ambiguous bare model names (Claude/Gemini/Mistral — also a person, a
-  // zodiac sign, a wind) sit at the tail, where they still contribute to
-  // scoring but don't pull off-topic stories into the feed. Whole-word matched,
-  // so short distinctive terms are safe. Override via NEWS_KEYWORDS to taste.
+  // Defaults tuned for developer/AI news. Ordered deliberately:
+  //  - The FIRST terms are specific, low-ambiguity search queries: per-keyword
+  //    sources (e.g. Hacker News) only spend their request budget on the lead.
+  //  - The TAIL broadens *scoring* coverage with general AI/ML vocabulary, so
+  //    items from already-curated AI sources (Reddit, Hugging Face, AI blogs)
+  //    reliably match the scorer without that vocabulary polluting the searches.
+  // Ambiguous bare model names (Claude/Gemini/Mistral — also a person, a zodiac
+  // sign, a wind) sit at the tail too. Whole-word matched, so short distinctive
+  // terms are safe. Override via NEWS_KEYWORDS to taste.
   NEWS_KEYWORDS: csvList(
     'LLM,GPT-5,AI agent,open source model,fine-tuning,coding assistant,Hugging Face,' +
-      'language model,model release,open weights,prompt engineering,multimodal,' +
-      'GPT-4o,Claude,Gemini,Llama 3,DeepSeek,Mistral,Qwen,Copilot',
+      'language model,model release,open weights,prompt engineering,multimodal,RAG,' +
+      'machine learning,neural network,transformer,diffusion,reasoning,quantization,' +
+      'inference,embeddings,benchmark,GPT-4o,Claude,Gemini,Llama,DeepSeek,Mistral,' +
+      'Qwen,Copilot,AI',
   ),
   NEWS_LANGUAGE: z.string().min(2).max(5).default('en'),
   NEWS_LOOKBACK_HOURS: z.coerce.number().int().positive().max(720).default(48),

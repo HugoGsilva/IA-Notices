@@ -36,8 +36,15 @@ ambiente. No mínimo:
 | `NEWSAPI_KEY` / `GUARDIAN_KEY` | Só se ativar esses providers (`*_ENABLED=true`). |
 | `ADMIN_TOKEN`         | Só se for usar o disparo manual `POST /internal/run`.  |
 
-GDELT já vem habilitado e não exige chave, então o serviço entrega notícias
-mesmo sem nenhuma chave de API.
+As fontes de alto sinal para dev/IA já vêm habilitadas e **não exigem chave** —
+Hacker News, Reddit, Hugging Face (papers) e blogs oficiais via RSS — então o
+serviço entrega notícias relevantes sem nenhuma chave de API. O GDELT vem
+**desligado** por padrão (notícia mainstream, baixo sinal para dev e com
+rate-limit agressivo); ligue com `GDELT_ENABLED=true` se quiser.
+
+Ajustes finos de relevância/volume (sem rebuild) ficam nas variáveis
+`HACKERNEWS_MIN_POINTS`, `REDDIT_MIN_UPVOTES`, `REDDIT_SUBREDDITS` e `RSS_FEEDS`
+— veja os comentários no [`portainer-stack.yml`](./portainer-stack.yml).
 
 ### 3. Subir
 

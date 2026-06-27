@@ -27,8 +27,14 @@ services:
       DATABASE_PATH: /app/data/ia-notices.sqlite
       LOG_LEVEL: '${LOG_LEVEL:-info}'
       # --- Sources (no API key; on by default for this deployment) ---
-      GDELT_ENABLED: '${GDELT_ENABLED:-true}'
+      # High-signal dev/AI sources: Hacker News, Reddit, Hugging Face papers and
+      # official AI blogs (RSS). GDELT is OFF by default — it is mainstream news,
+      # low signal for dev/AI, and rate-limits aggressively.
       HACKERNEWS_ENABLED: '${HACKERNEWS_ENABLED:-true}'
+      REDDIT_ENABLED: '${REDDIT_ENABLED:-true}'
+      HUGGINGFACE_ENABLED: '${HUGGINGFACE_ENABLED:-true}'
+      RSS_ENABLED: '${RSS_ENABLED:-true}'
+      GDELT_ENABLED: '${GDELT_ENABLED:-false}'
       # Optional keyed providers (stay off unless you provide a key):
       NEWSAPI_ENABLED: '${NEWSAPI_ENABLED:-false}'
       NEWSAPI_KEY: '${NEWSAPI_KEY:-}'
@@ -43,15 +49,19 @@ services:
       # --- Admin (optional: only for the manual run endpoint) ---
       ADMIN_TOKEN: '${ADMIN_TOKEN:-}'
       # --- Curation tuning ---
-      # Sensible defaults (dev/AI keywords ordered most-specific first,
-      # MIN_SCORE=2, LOOKBACK=48h, HN MIN_POINTS=50, HTTP timeout/retries) are
-      # baked into the image. Uncomment to override without rebuilding:
-      # NEWS_KEYWORDS: '${NEWS_KEYWORDS:-LLM,GPT-5,AI agent,open source model,fine-tuning,coding assistant,Hugging Face,language model,model release,GPT-4o,Claude,Gemini}'
+      # Sensible defaults (dev/AI keywords, MIN_SCORE=2, LOOKBACK=48h,
+      # HN MIN_POINTS=30, Reddit MIN_UPVOTES=25, HTTP timeout/retries) are baked
+      # into the image. Uncomment to override without rebuilding:
+      # NEWS_KEYWORDS: '${NEWS_KEYWORDS:-LLM,GPT-5,AI agent,open source model,fine-tuning,coding assistant,Hugging Face,language model}'
       # NEWS_MIN_SCORE: '${NEWS_MIN_SCORE:-2}'
       # NEWS_LOOKBACK_HOURS: '${NEWS_LOOKBACK_HOURS:-48}'
-      # Raise to tighten the Hacker News quality gate (fewer, more notable
-      # stories); lower if too few items come through.
-      # HACKERNEWS_MIN_POINTS: '${HACKERNEWS_MIN_POINTS:-50}'
+      # Quality gates — raise for fewer/stronger items, lower for more volume:
+      # HACKERNEWS_MIN_POINTS: '${HACKERNEWS_MIN_POINTS:-30}'
+      # REDDIT_MIN_UPVOTES: '${REDDIT_MIN_UPVOTES:-25}'
+      # Source tuning (subreddits, Reddit window, blog feeds):
+      # REDDIT_SUBREDDITS: '${REDDIT_SUBREDDITS:-LocalLLaMA,MachineLearning,ChatGPTCoding,ClaudeAI,OpenAI,artificial}'
+      # REDDIT_LISTING: '${REDDIT_LISTING:-day}'
+      # RSS_FEEDS: '${RSS_FEEDS:-https://huggingface.co/blog/feed.xml,https://openai.com/news/rss.xml,https://blog.google/technology/ai/rss/,https://deepmind.google/blog/rss.xml}'
       # HTTP_TIMEOUT_MS: '${HTTP_TIMEOUT_MS:-20000}'
       # HTTP_RETRIES: '${HTTP_RETRIES:-3}'
     volumes:
