@@ -35,14 +35,16 @@ services:
       DATABASE_PATH: /app/data/ia-notices.sqlite
       LOG_LEVEL: '${LOG_LEVEL:-info}'
       # --- Sources (no API key) ---
-      # Fixed ON: the high-signal dev/AI sources (Hacker News, Reddit, Hugging
-      # Face papers, official AI blogs via RSS). GDELT is fixed OFF — it is
-      # mainstream news, low signal for dev/AI, and rate-limits aggressively.
-      # These are hardcoded (not env-overridable) so the deployment is explicit.
+      # Fixed ON: the high-signal dev/AI sources (Hacker News, Hugging Face
+      # papers, official AI blogs via RSS). These are hardcoded (not
+      # env-overridable) so the deployment is explicit.
       HACKERNEWS_ENABLED: 'true'
-      REDDIT_ENABLED: 'true'
       HUGGINGFACE_ENABLED: 'true'
       RSS_ENABLED: 'true'
+      # Reddit is OFF: it blocks datacenter/VPS IPs on the public .json endpoint
+      # (HTTP 403) without OAuth. Re-enable only with OAuth credentials wired in.
+      REDDIT_ENABLED: 'false'
+      # GDELT is OFF: mainstream news, low signal for dev/AI, rate-limits hard.
       GDELT_ENABLED: 'false'
       # Optional keyed providers (stay off unless you provide a key):
       NEWSAPI_ENABLED: '${NEWSAPI_ENABLED:-false}'

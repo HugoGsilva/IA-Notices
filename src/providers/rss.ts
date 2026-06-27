@@ -5,6 +5,12 @@ import { noopLogger, type Logger } from '../logging/logger.js';
 
 const PROVIDER_NAME = 'rss';
 const ACCEPT = 'application/rss+xml, application/atom+xml, application/xml, text/xml';
+/**
+ * Only consider the most recent entries of each feed. Feeds are ordered
+ * newest-first, and some publish a long archive (hundreds of old posts) that
+ * the time-window filter would discard anyway — capping keeps the run lean.
+ */
+const MAX_ENTRIES_PER_FEED = 40;
 
 export interface RssOptions {
   enabled: boolean;
@@ -43,7 +49,7 @@ export class RssProvider implements NewsProvider {
         const response = await this.http.request(feed, { headers: { Accept: ACCEPT } });
         const xml = await response.text();
         const channel = feedTitle(xml);
-        for (const entry of parseEntries(xml)) {
+        for (const entry of parseEntries(xml).slice(0, MAX_ENTRIES_PER_FEED)) {
           if (!entry.title || !entry.link) continue;
           if (collected.has(entry.link)) continue;
           collected.set(entry.link, {
