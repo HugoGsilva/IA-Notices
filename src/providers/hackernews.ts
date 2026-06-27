@@ -73,15 +73,16 @@ export class HackerNewsProvider implements NewsProvider {
       url.searchParams.set('query', term);
       url.searchParams.set('tags', 'story');
       url.searchParams.set('hitsPerPage', String(hitsPerPage));
-      url.searchParams.set(
-        'numericFilters',
-        `created_at_i>${sinceSeconds},points>=${this.minPoints}`,
-      );
+      // Only the (documented-valid) recency filter goes to Algolia; the points
+      // threshold is applied client-side to avoid finicky numericFilters
+      // combinations that the HN search frontend rejects with HTTP 400.
+      url.searchParams.set('numericFilters', `created_at_i>${sinceSeconds}`);
 
       try {
         const body = await this.http.getJson<HnResponse>(url.toString());
         for (const hit of body.hits ?? []) {
           if (!hit.title) continue;
+          if ((hit.points ?? 0) < this.minPoints) continue;
           const key = hit.objectID ?? hit.url ?? hit.title;
           if (collected.has(key)) continue;
           collected.set(key, {

@@ -38,6 +38,8 @@ describe('HackerNewsProvider', () => {
             created_at: '2026-06-23T10:00:00Z',
           },
           { objectID: '2', title: 'Ask HN: best local model?', points: 50, num_comments: 30 },
+          // Below the points threshold — dropped client-side.
+          { objectID: '3', title: 'Low-signal post', points: 2, num_comments: 0 },
         ],
       }),
     );
@@ -45,6 +47,7 @@ describe('HackerNewsProvider', () => {
 
     const items = await provider.search(query);
 
+    // The 2-point story is filtered out; the two quality stories remain.
     expect(items).toHaveLength(2);
     expect(items[0]).toMatchObject({
       title: 'New open-source LLM released',
@@ -57,8 +60,10 @@ describe('HackerNewsProvider', () => {
 
     const calledUrl = new URL(String(fetchMock.mock.calls[0]![0]));
     expect(calledUrl.searchParams.get('tags')).toBe('story');
-    expect(calledUrl.searchParams.get('numericFilters')).toContain('points>=10');
-    expect(calledUrl.searchParams.get('numericFilters')).toContain('created_at_i>');
+    // Only the recency filter is sent to Algolia (points are filtered locally).
+    expect(calledUrl.searchParams.get('numericFilters')).toBe(
+      `created_at_i>${Math.floor(query.from.getTime() / 1000)}`,
+    );
   });
 
   it('isolates errors and returns []', async () => {
