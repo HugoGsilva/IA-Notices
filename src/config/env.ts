@@ -107,14 +107,14 @@ const envSchema = z.object({
       'language model,model release,open weights,prompt engineering,multimodal,RAG,' +
       'machine learning,neural network,transformer,diffusion,reasoning,quantization,' +
       'inference,embeddings,benchmark,GPT-4o,Claude,Gemini,Llama,DeepSeek,Mistral,' +
-      'Qwen,Copilot,AI',
+      'Qwen,Copilot,Anthropic,OpenAI,Meta AI,Google DeepMind,xAI,Apple Intelligence,' +
+      'AI',
   ),
   NEWS_LANGUAGE: z.string().min(2).max(5).default('en'),
   NEWS_LOOKBACK_HOURS: z.coerce.number().int().positive().max(720).default(48),
   NEWS_MAX_ITEMS: z.coerce.number().int().positive().max(200).default(20),
-  // With whole-word matching, a single title hit on a specific keyword (=2) is
-  // already high signal, so 2 is the inclusive-but-clean default.
-  NEWS_MIN_SCORE: z.coerce.number().min(0).default(2),
+  // Stricter default: generic AI mentions no longer pass without a real news signal.
+  NEWS_MIN_SCORE: z.coerce.number().min(0).default(5),
 
   // --- Discord delivery -----------------------------------------------------
   DISCORD_ENABLED: booleanFromEnv(false),

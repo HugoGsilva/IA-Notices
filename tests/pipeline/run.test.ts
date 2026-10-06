@@ -10,11 +10,11 @@ const NOW = new Date('2026-06-23T12:00:00.000Z');
 
 function rawItem(overrides: Partial<RawNewsItem> = {}): RawNewsItem {
   return {
-    title: 'Artificial intelligence breakthrough',
+    title: 'OpenAI releases GPT-5',
     url: 'https://example.com/a',
     source: 'Example',
     publishedAt: '2026-06-23T10:00:00.000Z',
-    description: 'about machine learning',
+    description: 'A new language model is available.',
     provider: 'fake',
     ...overrides,
   };
@@ -36,7 +36,10 @@ function recordingNotifier(delivered: boolean): Notifier & { calls: number } {
   };
 }
 
-const config = loadConfig({ NEWS_KEYWORDS: 'artificial intelligence,machine learning' });
+const config = loadConfig({
+  NEWS_KEYWORDS: 'artificial intelligence,machine learning,OpenAI,GPT-5',
+  NEWS_MIN_SCORE: '5',
+});
 
 describe('runPipeline', () => {
   let repository: NewsRepository;
@@ -49,7 +52,7 @@ describe('runPipeline', () => {
     const registry = new ProviderRegistry([
       fakeProvider([
         rawItem({ url: 'https://example.com/a' }),
-        rawItem({ url: 'https://example.com/b', title: 'More AI: machine learning' }),
+        rawItem({ url: 'https://example.com/b', title: 'OpenAI announces a machine learning update' }),
       ]),
     ]);
     const notifier = recordingNotifier(true);

@@ -81,7 +81,7 @@ serem explicitamente habilitados.
 | `NEWS_LANGUAGE`       | `en`                                               | Idioma preferido (ISO 639-1).                                   |
 | `NEWS_LOOKBACK_HOURS` | `48`                                               | Janela temporal de busca, em horas.                             |
 | `NEWS_MAX_ITEMS`      | `20`                                               | Máximo de itens por execução.                                   |
-| `NEWS_MIN_SCORE`      | `2`                                                | Score mínimo para manter/entregar um item.                      |
+| `NEWS_MIN_SCORE`      | `5`                                                | Score mínimo; o score considera relevância, sinais de notícia, fonte e penalização de slop. |
 | `DISCORD_ENABLED`     | `false`                                            | Habilita a entrega no Discord.                                  |
 | `DISCORD_WEBHOOK_URL` | —                                                  | URL do Webhook do Discord (**segredo**).                        |
 | `SCHEDULE_ENABLED`    | `false`                                            | Habilita a execução agendada.                                   |
@@ -99,12 +99,27 @@ A cada execução, o pipeline:
 1. **busca** notícias nos providers habilitados (em paralelo, com falhas
    isoladas);
 2. **normaliza** para um formato comum (datas ISO, dedup key por URL canônica);
-3. **pontua** por relevância (heurística de keywords + bônus de recência) e
-   **categoriza** pelas keywords encontradas — ver ADR 0003;
-4. **filtra** por score mínimo, janela temporal e idioma;
+3. **pontua** por relevância (keywords específicas + sinais de evento/fatos + qualidade da fonte + recência) e
+   **penaliza** clickbait, listas, tutoriais, conteúdo promocional e outros padrões de slop — ver ADR 0003;
+4. **filtra** por score mínimo, sinais mínimos de notícia, janela temporal, idioma e tipo de link;
 5. **deduplica** dentro do lote e contra o histórico no banco;
 6. **persiste** os itens novos;
 7. **entrega** um digest dos melhores itens ao Discord (quando habilitado).
+
+### Curadoria anti-slop
+
+O score não depende mais apenas da presença de uma keyword. Termos específicos
+como modelos, empresas e técnicas de IA recebem mais peso; lançamentos, releases,
+pesquisas, incidentes de segurança, financiamento, regulação e fatos concretos
+recebem bônus; fontes primárias e editoriais reconhecidas recebem um bônus menor.
+
+Conteúdo com padrões típicos de slop — listas de "melhores ferramentas", tutoriais,
+opinião, newsletters, entrevistas, conteúdo patrocinado, pacotes de prompts, spam
+SEO e clickbait — sofre uma penalização forte e é rejeitado pelo filtro.
+
+O padrão de `NEWS_MIN_SCORE=5` foi escolhido para reduzir bastante o volume sem
+transformar qualquer menção genérica a "AI" em notícia. Para deixar o sistema ainda
+mais rígido, aumente esse valor; para ampliar a cobertura, diminua-o.
 
 ### Providers
 
@@ -136,6 +151,27 @@ serão implementados no futuro (ver `AGENTS.md`, seção 5).
   `401`. A resposta de sucesso traz um resumo com contadores
   (`fetched`, `kept`, `inserted`, `delivered`).
 
+## Estrutura do repositório
+
+```text
+.
+├── .github/workflows/   # CI e release da imagem
+├── deploy/              # arquivos de deploy para Swarm/Portainer
+├── docs/adr/            # decisões arquiteturais
+├── drizzle/             # migrações e metadados do banco
+├── src/                 # código da aplicação
+├── tests/               # testes automatizados
+├── Dockerfile
+├── docker-compose.yml
+├── drizzle.config.ts
+└── package.json
+```
+
+Os arquivos de configuração do projeto ficam na raiz com seus nomes
+convencionais (`.env.example`, `.gitignore`, `.dockerignore`, `.editorconfig` e
+configurações do Prettier). Isso evita que as ferramentas dependam de nomes
+`.txt` não reconhecidos automaticamente.
+
 ## Arquitetura
 
 Decisões registradas em [`docs/adr/`](./docs/adr): stack (0001), agendamento
@@ -146,6 +182,6 @@ nas regras do `AGENTS.md`.
 
 ## Status
 
-MVP funcional: providers (NewsAPI.org + GDELT), curadoria heurística,
+MVP funcional: providers (NewsAPI.org + GDELT), curadoria heurística anti-slop,
 persistência, entrega Discord, agendamento e endpoint manual protegido. Tudo
 desligado por padrão até ser configurado.

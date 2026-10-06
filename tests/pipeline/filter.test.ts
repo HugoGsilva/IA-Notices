@@ -4,16 +4,16 @@ import type { NewsItem } from '../../src/domain/types.js';
 
 function item(overrides: Partial<NewsItem> = {}): NewsItem {
   return {
-    title: 't',
-    url: 'https://example.com/a',
-    source: null,
-    publishedAt: '2026-06-23T00:00:00.000Z',
-    description: null,
+    title: 'OpenAI releases a new model',
+    url: 'https://openai.com/news/new-model',
+    source: 'OpenAI',
+    publishedAt: '2026-06-23T01:00:00.000Z',
+    description: 'A new language model is available.',
     imageUrl: null,
-    language: null,
+    language: 'en',
     provider: 'p',
     score: 5,
-    categories: [],
+    categories: ['openai'],
     dedupKey: 'k',
     fetchedAt: '2026-06-23T01:00:00.000Z',
     ...overrides,
@@ -23,14 +23,68 @@ function item(overrides: Partial<NewsItem> = {}): NewsItem {
 const options = {
   from: new Date('2026-06-22T00:00:00.000Z'),
   language: 'en',
-  minScore: 2,
+  minScore: 5,
 };
 
 describe('filterItems', () => {
   it('drops items below the minimum score', () => {
-    const result = filterItems([item({ score: 1 }), item({ score: 2 })], options);
+    const result = filterItems([item({ score: 4 }), item({ score: 5 })], options);
     expect(result).toHaveLength(1);
-    expect(result[0]?.score).toBe(2);
+    expect(result[0]?.score).toBe(5);
+  });
+
+  it('rejects generic AI mentions without a meaningful news signal', () => {
+    const result = filterItems(
+      [
+        item({
+          dedupKey: 'generic-ai',
+          score: 8,
+          categories: ['ai'],
+          source: 'Random Blog',
+          url: 'https://example.com/ai',
+          title: 'AI is everywhere now',
+          description: 'Artificial intelligence is changing everything.',
+        }),
+      ],
+      options,
+    );
+    expect(result).toHaveLength(0);
+  });
+
+  it('drops obvious clickbait/listicle/tutorial slop even with a high score', () => {
+    const result = filterItems(
+      [
+        item({
+          dedupKey: 'slop',
+          score: 20,
+          categories: ['gpt-5'],
+          title: '10 best AI tools you need to try right now',
+          description: 'A guide for beginners.',
+          source: 'Random Blog',
+          url: 'https://example.com/tools',
+        }),
+      ],
+      options,
+    );
+    expect(result).toHaveLength(0);
+  });
+
+  it('keeps a concrete, time-relevant launch from an unknown source', () => {
+    const result = filterItems(
+      [
+        item({
+          dedupKey: 'launch',
+          score: 8,
+          categories: ['llm'],
+          source: 'Example News',
+          url: 'https://example.com/open-source-model',
+          title: 'Company launches a 70B open-source model',
+          description: 'The new model is released today.',
+        }),
+      ],
+      options,
+    );
+    expect(result).toHaveLength(1);
   });
 
   it('drops items published before the window but keeps unknown dates', () => {
@@ -61,15 +115,15 @@ describe('filterItems', () => {
     expect(result.map((i) => i.dedupKey)).toEqual(['pt', 'pt-br', 'en', 'en-us', 'full']);
   });
 
-  it('drops non-Latin-script items (the Arabic/CJK leak) and keeps EN/PT', () => {
+  it('drops non-Latin-script items and keeps EN/PT', () => {
     const result = filterItems(
       [
-        item({ dedupKey: 'arabic', title: 'نموذج DeepSeek الجديد للذكاء الاصطناعي' }),
-        item({ dedupKey: 'cjk', title: 'DeepSeek 发布新模型' }),
-        item({ dedupKey: 'cyrillic', title: 'Новая модель DeepSeek для разработчиков' }),
-        item({ dedupKey: 'english', title: 'DeepSeek releases V3, an open-weights model' }),
+        item({ dedupKey: 'arabic', title: 'نموذج GPT-5 الجديد للذكاء الاصطناعي' }),
+        item({ dedupKey: 'cjk', title: 'GPT-5 发布新模型' }),
+        item({ dedupKey: 'cyrillic', title: 'Новая модель GPT-5 для разработчиков' }),
+        item({ dedupKey: 'english', title: 'GPT-5 releases a new open-weights model' }),
         item({ dedupKey: 'model-name', title: 'GPT-4o and DeepSeek-V3 compared' }),
-        item({ dedupKey: 'portuguese', title: 'Novo modelo de IA da DeepSeek é lançado' }),
+        item({ dedupKey: 'portuguese', title: 'Novo modelo de IA da OpenAI é lançado' }),
       ],
       options,
     );
@@ -78,7 +132,15 @@ describe('filterItems', () => {
 
   it('skips the script gate for trusted providers (e.g. Hugging Face papers)', () => {
     const result = filterItems(
-      [item({ dedupKey: 'hf', provider: 'huggingface', title: '通义千问 Qwen technical report' })],
+      [
+        item({
+          dedupKey: 'hf',
+          provider: 'huggingface',
+          title: '通义千问 Qwen technical report',
+          categories: ['qwen'],
+          score: 8,
+        }),
+      ],
       options,
     );
     expect(result.map((i) => i.dedupKey)).toEqual(['hf']);
@@ -91,7 +153,7 @@ describe('filterItems', () => {
         item({ dedupKey: 'weights', url: 'https://example.com/model/qwen.safetensors' }),
         item({ dedupKey: 'image', url: 'https://i.example.com/chart.png' }),
         item({ dedupKey: 'article', url: 'https://openai.com/index/new-model' }),
-        item({ dedupKey: 'hn', url: 'https://news.ycombinator.com/item?id=123' }),
+        item({ dedupKey: 'hn', url: 'https://news.ycombinator.com/item?id=123', source: 'Hacker News' }),
         item({ dedupKey: 'paper', url: 'https://huggingface.co/papers/2406.12345' }),
       ],
       options,
